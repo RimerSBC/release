@@ -1,0 +1,3 @@
+#use mingw32-make.exe -f Makefile.win
+all:
+	$(CC) -g -Wall uf2conv.c -I. -Wno-pointer-to-int-cast -o uf2conv

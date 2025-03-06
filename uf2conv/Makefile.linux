@@ -1,0 +1,3 @@
+all:
+	$(CC) -g -Wall uf2conv.c -I. -Wno-pointer-to-int-cast -o uf2conv
+	chmod +x uf2conv

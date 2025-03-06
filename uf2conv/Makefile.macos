@@ -1,0 +1,3 @@
+all:
+	$(CC) -g -Wall uf2conv.c -I. -framework IOKit -framework CoreFoundation -Wno-void-pointer-to-int-cast -o uf2conv
+	xattr -cr uf2conv
