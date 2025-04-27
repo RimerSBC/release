@@ -1,6 +1,6 @@
 10 XSIZE_=39 : YSIZE_=19 : MAX_LENGTH = 254: MAX_LEVEL = 9
 15 def SNAKEDELAY#(lvl) = 200-lvl*20
-20 print " Snake game V1.0 "," Use WASD keys for snake control" ' Greatings
+20 print " Snake game V1.0 "," Use WASD keys for snake control" ' Greetings
 30 input "Enter starting level (1-5)",lvl
 40 if lvl > 5 then print "Don\'t flatter yourself...":sleep(2000):lvl = 5  
 50 if lvl < 1 then print "Chicken...":sleep(2000):lvl = 1
