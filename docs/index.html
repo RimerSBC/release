@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rimer SBC - User Manual</title>
+<link rel="icon" href="img/logo.png">
+<link rel="stylesheet" href="assets/manual.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="pen" x="-2%" y="-2%" width="104%" height="104%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.008" numOctaves="1" seed="4" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="1.6" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <pattern id="hatchY" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(55)">
+      <rect width="5" height="5" fill="#fff"/><line x1="0" y1="0" x2="0" y2="5" stroke="#111" stroke-width="1.1"/>
+    </pattern>
+    <pattern id="hatchL" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(55)">
+      <rect width="7" height="7" fill="#fff"/><line x1="0" y1="0" x2="0" y2="7" stroke="#111" stroke-width="0.6"/>
+    </pattern>
+    <pattern id="hatchX" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(55)">
+      <rect width="5" height="5" fill="#fff"/><line x1="0" y1="0" x2="0" y2="5" stroke="#111" stroke-width="1"/><line x1="0" y1="0" x2="5" y2="0" stroke="#111" stroke-width="0.7"/>
+    </pattern>
+  </defs>
+</svg>
+
+<!-- ================================================================ CONTENTS -->
+<nav class="toc" aria-label="Contents">
+  <a class="brand" href="#top"><img src="img/logo.png" alt=""><div><b>Rimer SBC</b><span>User manual · firmware V0.64</span></div></a>
+  <ol>
+    <li><a href="#meet">Meet Rimer</a></li>
+    <li><a href="#inside">Inside the board</a>
+      <ol>
+        <li><a href="#blocks">Block diagram</a></li>
+        <li><a href="#power">Power</a></li>
+        <li><a href="#display">Display</a></li>
+        <li><a href="#audio">Sound and analog</a></li>
+        <li><a href="#software">Software</a></li>
+      </ol>
+    </li>
+    <li><a href="#start">Getting started</a>
+      <ol>
+        <li><a href="#kit">The kit</a></li>
+        <li><a href="#lcd">Fitting the LCD</a></li>
+        <li><a href="#first">First power on</a></li>
+        <li><a href="#battery">Battery</a></li>
+      </ol>
+    </li>
+    <li><a href="#keyboard">The keyboard</a>
+      <ol>
+        <li><a href="#key-legends">Reading a key</a></li>
+        <li><a href="#key-control">Cursor and editing keys</a></li>
+      </ol>
+    </li>
+    <li><a href="#shell">Working with the shell</a>
+      <ol>
+        <li><a href="#interfaces">Interfaces</a></li>
+        <li><a href="#lookup">How a command is found</a></li>
+        <li><a href="#cmdline">More on the command line</a></li>
+        <li><a href="#scripts">Scripts and startup</a></li>
+        <li><a href="#settings">Your settings</a></li>
+      </ol>
+    </li>
+    <li><a href="#ports">The IO ports</a>
+      <ol>
+        <li><a href="#pinout">Pinouts</a></li>
+        <li><a href="#dio">Digital IO</a></li>
+        <li><a href="#sio">Serial protocols</a></li>
+        <li><a href="#aio">Analog IO</a></li>
+      </ol>
+    </li>
+    <li><a href="#storage">Files and storage</a>
+      <ol>
+        <li><a href="#sdcard">SD card</a></li>
+        <li><a href="#eeprom">EEPROM and LLFS</a></li>
+      </ol>
+    </li>
+    <li><a href="#apps">BASIC-D and ZX Spectrum</a>
+      <ol>
+        <li><a href="#basic">BASIC-D</a></li>
+        <li><a href="#zx">ZX Spectrum 48</a></li>
+      </ol>
+    </li>
+    <li><a href="#firmware">Firmware</a>
+      <ol>
+        <li><a href="#update">Updating</a></li>
+        <li><a href="#swd">Programming a blank board</a></li>
+        <li><a href="#own">Your own firmware</a></li>
+      </ol>
+    </li>
+    <li class="appx"><a href="#ref">A · Command reference</a></li>
+    <li class="appx"><a href="#specs">B · Specifications</a></li>
+  </ol>
+</nav>
+
+<main id="top"><div class="page">
+
+<!-- ================================================================ COVER -->
+<header class="cover">
+  <span class="kicker">User manual</span>
+  <h1>Rimer SBC</h1>
+  <p>A pocket computer with a real keyboard, a fast colour screen and open ports. Built to write code on, measure things with, and play a game of Jetpac in between.</p>
+  <div class="meta">Board V1.0 Rev A · firmware V0.64 · rshell 0.72</div>
+</header>
+
+<!-- ================================================================ 1 MEET -->
+<section class="chapter" id="meet">
+  <div class="chapter-head"><div class="num">1</div><h2>Meet Rimer</h2><div class="sub">What it is and what it's for</div></div>
+
+  <p class="opening">Rimer started as my bench tool. I needed a Cortex-M4 board I could program quickly, poke at serial devices with, and carry around without a laptop. It grew a keyboard, a colour screen and a battery, and turned into a small computer of its own.</p>
+
+  <p>It boots straight into a command shell. From there you can switch IO pins, talk SPI, UART or I2C to a sensor, read voltages, run scripts from the SD card, write BASIC programs, or load a ZX Spectrum game. Everything runs on one Microchip ATSAMD51 microcontroller at 120 MHz - there is no Linux and no boot time to speak of.</p>
+
+  <figure class="wide">
+    <img src="img/rimer_drawing.png" alt="Drawing of the Rimer SBC">
+    <figcaption><b>Rimer SBC.</b> The display and the ports at the top, the 40-key keyboard below. POWER and RESET are on the left edge.</figcaption>
+  </figure>
+
+  <h3>At a glance</h3>
+  <table class="spec">
+    <tr><th>Processor</th><td>ATSAMD51J20A, ARM Cortex-M4F with FPU, 120 MHz</td></tr>
+    <tr><th>Memory</th><td>1 MB Flash, 256 KB RAM, 64 KB EEPROM</td></tr>
+    <tr><th>Display</th><td>3.2" IPS, 320 x 240, up to 60 fps</td></tr>
+    <tr><th>Keyboard</th><td>40 low profile mechanical keys, ZX Spectrum layout</td></tr>
+    <tr><th>Ports</th><td>2 x 8-pin SPORT (IO, SPI, UART, I2C, PWM), 1 x COMM (UART / I2C), SD card, 3.5 mm analog jack, USB-C</td></tr>
+    <tr><th>Power</th><td>USB-C or Li-Ion battery with onboard charger</td></tr>
+  </table>
+  <p>Full figures are in <a href="#specs">Appendix B</a>.</p>
+</section>
+
+<!-- ================================================================ 2 INSIDE -->
+<section class="chapter" id="inside">
+  <div class="chapter-head"><div class="num">2</div><h2>Inside the board</h2><div class="sub">How the parts fit together</div></div>
+
+  <p class="opening">Everything on Rimer hangs off one microcontroller. There is no separate graphics or USB chip - the MCU drives the display, scans the keyboard, runs the file systems and talks to the ports itself. Knowing which peripheral does what helps a lot once you start using the ports for your own projects.</p>
+
+  <h3 id="blocks">Block diagram</h3>
+  <figure class="wide">
+  <svg viewBox="0 0 900 520" role="img" aria-label="Rimer SBC block diagram"><defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#23262a"/></marker>
+    </defs><style>text{paint-order:stroke;stroke:#fff;stroke-width:3.2px;stroke-linejoin:round}text[fill="#fff"],text[fill="#ffffff"],text[fill="#ffd400"],.kw,.ky,.kg,.pm,.pn{stroke:none}
+      .bx{fill:#fff;stroke:#111;stroke-width:1.5}
+      .hd{fill:url(#hatchY)}
+      .ht{font-weight:700;font-size:15px;fill:#000;letter-spacing:.06em}
+      .tx{font-size:13px;fill:#23262a}
+      .sm{font-size:11.5px;fill:#5d636b}
+      .ln{stroke:#111;stroke-width:1.6;fill:none}
+      .bus{stroke:#111;stroke-width:4;fill:none}
+    </style><g filter="url(#pen)">
+    
+    
+    <!-- MCU -->
+    <rect class="bx" x="345" y="110" width="210" height="320" rx="8"/>
+    <rect class="hd" x="345" y="110" width="210" height="34" rx="8"/><rect class="hd" x="345" y="128" width="210" height="16"/>
+    <text class="ht" x="450" y="133" text-anchor="middle">MCU</text>
+    <text class="tx" x="450" y="180" text-anchor="middle" font-weight="700">ATSAMD51J20A</text>
+    <text class="tx" x="450" y="202" text-anchor="middle">Cortex-M4F · 120 MHz</text>
+    <text class="tx" x="450" y="224" text-anchor="middle">1 MB Flash · 256 KB RAM</text>
+    <rect x="395" y="260" width="110" height="110" rx="4" fill="none" stroke="#9aa0a6" stroke-dasharray="4 3"/>
+    <text class="sm" x="450" y="300" text-anchor="middle">DMA</text>
+    <text class="sm" x="450" y="318" text-anchor="middle">6 x SERCOM</text>
+    <text class="sm" x="450" y="336" text-anchor="middle">ADC · DAC · TC</text>
+    <text class="sm" x="450" y="354" text-anchor="middle">SDHC · USB</text>
+
+    <!-- POWER -->
+    <rect class="bx" x="30" y="40" width="220" height="150" rx="8"/>
+    <rect class="hd" x="30" y="40" width="220" height="30" rx="8"/><rect class="hd" x="30" y="56" width="220" height="14"/>
+    <text class="ht" x="140" y="61" text-anchor="middle">POWER</text>
+    <text class="tx" x="45" y="96">USB-C connector</text>
+    <text class="tx" x="45" y="118">Li-Ion charger</text>
+    <text class="tx" x="45" y="140">3.3 V / 2 A buck</text>
+    <text class="tx" x="45" y="162">3.0 V analog reference</text>
+
+    <!-- DIGITAL IO -->
+    <rect class="bx" x="30" y="250" width="220" height="230" rx="8"/>
+    <rect class="hd" x="30" y="250" width="220" height="30" rx="8"/><rect class="hd" x="30" y="266" width="220" height="14"/>
+    <text class="ht" x="140" y="271" text-anchor="middle">DIGITAL IO</text>
+    <text class="tx" x="45" y="308" font-weight="700">SPORT0</text><text class="sm" x="118" y="308">SERCOM1 + TCC0</text>
+    <text class="tx" x="45" y="334" font-weight="700">SPORT1</text><text class="sm" x="118" y="334">SERCOM2 + TC2</text>
+    <text class="tx" x="45" y="360" font-weight="700">COMM</text><text class="sm" x="118" y="360">SERCOM5</text>
+    <text class="tx" x="45" y="386" font-weight="700">SD card</text><text class="sm" x="118" y="386">SDHC, 4-bit</text>
+    <text class="sm" x="45" y="425">Switched 3.3 V on every port,</text>
+    <text class="sm" x="45" y="438">current limited, fault sensed</text>
+
+    <!-- DISPLAY -->
+    <rect class="bx" x="650" y="20" width="220" height="120" rx="8"/>
+    <rect class="hd" x="650" y="20" width="220" height="30" rx="8"/><rect class="hd" x="650" y="36" width="220" height="14"/>
+    <text class="ht" x="760" y="41" text-anchor="middle">DISPLAY</text>
+    <text class="tx" x="665" y="76">3.2" IPS, 320 x 240</text>
+    <text class="tx" x="665" y="98">ST7789V2 / ILI9341</text>
+    <text class="sm" x="665" y="120">SPI deserialized to 8-bit bus</text>
+
+    <!-- KEYBOARD -->
+    <rect class="bx" x="650" y="170" width="220" height="90" rx="8"/>
+    <rect class="hd" x="650" y="170" width="220" height="30" rx="8"/><rect class="hd" x="650" y="186" width="220" height="14"/>
+    <text class="ht" x="760" y="191" text-anchor="middle">KEYBOARD</text>
+    <text class="tx" x="665" y="226">40 keys, 8 x 5 matrix</text>
+    <text class="sm" x="665" y="247">PI4IOE5V9554 I2C expander</text>
+
+    <!-- EEPROM -->
+    <rect class="bx" x="650" y="285" width="220" height="70" rx="8"/>
+    <text class="ht" x="665" y="312">EEPROM</text>
+    <text class="tx" x="665" y="338">64 KB CAT24C512 · LLFS</text>
+
+    <!-- ANALOG -->
+    <rect class="bx" x="650" y="380" width="220" height="120" rx="8"/>
+    <rect class="hd" x="650" y="380" width="220" height="30" rx="8"/><rect class="hd" x="650" y="396" width="220" height="14"/>
+    <text class="ht" x="760" y="401" text-anchor="middle">ANALOG IO</text>
+    <text class="tx" x="665" y="436">700 mW speaker amp</text>
+    <text class="tx" x="665" y="458">Buffered in / out</text>
+    <text class="sm" x="665" y="480">3.5 mm jack</text>
+
+    <!-- links -->
+    <path class="bus" d="M250 100H345" marker-end="url(#arr)"/><text class="sm" x="262" y="92">USB D+ D-</text>
+    <path class="ln" d="M250 160H345"/><text class="sm" x="262" y="152">VBUS, enable</text>
+    <path class="bus" d="M250 320H345" marker-start="url(#arr)" marker-end="url(#arr)"/><text class="sm" x="262" y="310">SERCOM 1/2/5</text>
+    <path class="ln" d="M250 352H345"/><text class="sm" x="262" y="345">TCC0, TC2</text>
+    <path class="bus" d="M250 390H345" marker-start="url(#arr)"/><text class="sm" x="262" y="382">SDHC</text>
+    <path class="bus" d="M555 160H615V80H650" marker-end="url(#arr)"/><text class="sm" x="562" y="152">SPI</text>
+    <path class="bus" d="M555 215H650" marker-end="url(#arr)"/><text class="sm" x="562" y="207">I2C</text>
+    <path class="bus" d="M600 215V320H650" marker-end="url(#arr)"/>
+    <circle cx="600" cy="215" r="5" fill="#23262a"/>
+    <path class="bus" d="M555 400H615V440H650" marker-end="url(#arr)"/><text class="sm" x="562" y="392">DAC, ADC</text>
+  </g></svg>
+  <figcaption><b>Block diagram.</b> Thick lines are buses; the display SPI is fed by DMA. The keyboard and the EEPROM share one I2C bus. Full schematics: <a href="files/rimer_schematics.pdf">rimer_schematics.pdf</a>.</figcaption>
+  </figure>
+
+  <h3 id="power">Power</h3>
+  <p>Rimer runs from USB-C, from the battery, or from both. With USB plugged in, the board runs from USB and charges the battery at the same time; unplug it and the battery takes over without a reset. The MCU can read both voltages, so a program always knows where its power comes from.</p>
+
+  <figure>
+  <svg viewBox="0 0 820 300" role="img" aria-label="Power path"><defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M0 0L10 5L0 10z" fill="#23262a"/></marker></defs><style>text{paint-order:stroke;stroke:#fff;stroke-width:3.2px;stroke-linejoin:round}text[fill="#fff"],text[fill="#ffffff"],text[fill="#ffd400"],.kw,.ky,.kg,.pm,.pn{stroke:none}
+      .b2{fill:#fff;stroke:#111;stroke-width:1.5}
+      .y2{fill:url(#hatchY);stroke:#111;stroke-width:1.5}
+      .t2{font-size:13px;fill:#23262a}
+      .s2{font-size:11.5px;fill:#5d636b}
+      .l2{stroke:#111;stroke-width:1.8;fill:none}
+    </style><g filter="url(#pen)">
+    
+    
+    <rect class="y2" x="20" y="40" width="110" height="50" rx="6"/><text class="t2" x="75" y="70" text-anchor="middle" font-weight="700">USB-C</text>
+    <rect class="b2" x="190" y="130" width="130" height="50" rx="6"/><text class="t2" x="255" y="152" text-anchor="middle">Charger</text><text class="s2" x="255" y="169" text-anchor="middle">MCP73832</text>
+    <rect class="y2" x="190" y="225" width="130" height="50" rx="6"/><text class="t2" x="255" y="247" text-anchor="middle" font-weight="700">Battery</text><text class="s2" x="255" y="264" text-anchor="middle">LiPo or 18650</text>
+    <rect class="b2" x="390" y="40" width="130" height="50" rx="6"/><text class="t2" x="455" y="62" text-anchor="middle">3.3 V buck</text><text class="s2" x="455" y="79" text-anchor="middle">2 A, always on</text>
+    <rect class="b2" x="590" y="20" width="200" height="40" rx="6"/><text class="t2" x="690" y="45" text-anchor="middle">MCU, EEPROM</text>
+    <rect class="b2" x="590" y="90" width="200" height="50" rx="6"/><text class="t2" x="690" y="112" text-anchor="middle">VDD switch</text><text class="s2" x="690" y="129" text-anchor="middle">LCD, keyboard, SD, audio</text>
+    <rect class="b2" x="590" y="170" width="200" height="40" rx="6"/><text class="t2" x="690" y="195" text-anchor="middle">3.0 V analog reference</text>
+    <rect class="b2" x="590" y="235" width="200" height="50" rx="6"/><text class="t2" x="690" y="257" text-anchor="middle">Port switches</text><text class="s2" x="690" y="274" text-anchor="middle">SPORT 300 mA · COMM 125 mA</text>
+    <path class="l2" d="M130 65H390" marker-end="url(#a2)"/><text class="s2" x="250" y="57" text-anchor="middle">VBUS via diode</text>
+    <path class="l2" d="M160 65V155H190" marker-end="url(#a2)"/>
+    <circle cx="160" cy="65" r="4" fill="#23262a"/>
+    <path class="l2" d="M255 180V225" marker-end="url(#a2)"/>
+    <path class="l2" d="M320 250H350V65" /><circle cx="350" cy="65" r="4" fill="#23262a"/><text class="s2" x="358" y="200">VBAT</text>
+    <path class="l2" d="M520 65H555V40H590" marker-end="url(#a2)"/>
+    <path class="l2" d="M555 65V115H590" marker-end="url(#a2)"/><text class="s2" x="595" y="155">switched by VDD_EN</text>
+    <path class="l2" d="M570 140V190H590" marker-end="url(#a2)"/>
+    <path class="l2" d="M570 190V260H590" marker-end="url(#a2)"/>
+  </g></svg>
+  <figcaption><b>Power path.</b> The MCU supply is always on. Everything else sits behind switches the firmware controls: <code>sys:off</code> cuts VDD, <code>dio:pwr</code> and <code>sio:pwr</code> switch the ports.</figcaption>
+  </figure>
+
+  <p>Each port has its own current limited switch with a fault output, and a red LED next to it shows an overload. A short on one port doesn't take the board down.</p>
+
+  <h3 id="display">Display</h3>
+  <p>The screen is a 3.2" IPS panel with an ST7789V2 (or ILI9341) controller. Instead of the usual slow SPI link, the MCU sends pixels over a 60 MHz SPI line that is deserialized on the board into the panel's parallel bus. The frame buffer lives in RAM as one byte per pixel (RGB 3-3-2, 75 KB) and a DMA channel pushes it to the panel continuously. Drawing is just writing to memory; the hardware does the rest at up to 60 frames per second.</p>
+
+  <figure>
+    <img src="img/rimer_lcd.png" alt="Drawing of the LCD module on its brackets">
+    <figcaption><b>The LCD module</b> sits on two brackets above the board and connects through a 40-pin 0.5 mm FFC.</figcaption>
+  </figure>
+
+  <h3 id="audio">Sound and analog</h3>
+  <p>A 700 mW class-D amplifier (PAM8304) drives the onboard speaker from DAC channel 1. DAC channel 0 and one ADC input go to the 3.5 mm jack through an op-amp buffer, so the jack is an analog input and output, not a headphone socket. The second ADC watches the battery.</p>
+
+  <h3 id="software">Software</h3>
+  <p>The firmware is in two parts. <b>ucosR</b> is the operating system: the FreeRTOS kernel, drivers for everything on the board, the file systems and the shell. It is compiled separately into a library. The <b>Rimer application</b> sits on top and adds the interfaces for the ports, BASIC-D and the emulator.</p>
+
+  <figure>
+  <svg viewBox="0 0 760 330" role="img" aria-label="Software layers"><style>text{paint-order:stroke;stroke:#fff;stroke-width:3.2px;stroke-linejoin:round}text[fill="#fff"],text[fill="#ffffff"],text[fill="#ffd400"],.kw,.ky,.kg,.pm,.pn{stroke:none}
+      .lr{stroke:#111;stroke-width:1.5}
+      .lt{font-size:14px;fill:#23262a;font-weight:700}
+      .ls{font-size:12px;fill:#5d636b}
+      .br{stroke:#111;stroke-width:1.5;fill:none}
+      .bt{font-size:12.5px;fill:#23262a;font-weight:700}
+    </style><g filter="url(#pen)">
+    
+    <rect class="lr" x="20" y="15" width="560" height="50" rx="6" fill="url(#hatchY)"/>
+    <text class="lt" x="38" y="38">Applications</text><text class="ls" x="38" y="56" fill="#23262a">BASIC-D · ZX Spectrum emulator · your programs</text>
+    <rect class="lr" x="20" y="73" width="560" height="50" rx="6" fill="url(#hatchL)"/>
+    <text class="lt" x="38" y="96">Interfaces</text><text class="ls" x="38" y="114">set  aio  dio  sio  sd  eep  mem  bas  zx</text>
+    <rect class="lr" x="20" y="131" width="560" height="50" rx="6" fill="#fff"/>
+    <text class="lt" x="38" y="154">rshell</text><text class="ls" x="38" y="172">command line · terminal · red editor · sys, utl, built-in commands</text>
+    <rect class="lr" x="20" y="189" width="560" height="50" rx="6" fill="#fff"/>
+    <text class="lt" x="38" y="212">Services and drivers</text><text class="ls" x="38" y="230">LCD · keyboard · I2C · FatFs · LLFS · TinyUSB · tprintf</text>
+    <rect class="lr" x="20" y="247" width="560" height="34" rx="6" fill="#fff"/>
+    <text class="lt" x="38" y="269">FreeRTOS kernel</text>
+    <rect class="lr" x="20" y="289" width="560" height="30" rx="6" fill="#23262a"/>
+    <text class="lt" x="38" y="309" style="fill:#ffd400;stroke:none">Hardware</text>
+    <path class="br" d="M592 18H604V120H592"/><text class="bt" x="614" y="66">Rimer</text><text class="bt" x="614" y="82">application</text>
+    <path class="br" d="M592 134H604V278H592"/><text class="bt" x="614" y="204">ucosR</text><text class="ls" x="614" y="220">libucosR.a</text>
+  </g></svg>
+  <figcaption><b>Software layers.</b> Everything below the interfaces is the same for every Rimer firmware. Your own firmware links the ucosR library and adds its own interfaces (see <a href="#own">Your own firmware</a>).</figcaption>
+  </figure>
+</section>
+
+<!-- ================================================================ 3 START -->
+<section class="chapter" id="start">
+  <div class="chapter-head"><div class="num">3</div><h2>Getting started</h2><div class="sub">From the box to the first prompt</div></div>
+
+  <p class="opening">The kit comes with the board assembled and programmed. You only need to fit the display, put the keycaps on and plug in a USB-C cable. Ten minutes, and a screwdriver.</p>
+
+  <h3 id="kit">The kit</h3>
+  <table>
+    <thead><tr><th>Part</th><th>Qty</th></tr></thead>
+    <tr><td>Main board</td><td>1</td></tr>
+    <tr><td>3.2" LCD module</td><td>1</td></tr>
+    <tr><td>LCD brackets</td><td>2</td></tr>
+    <tr><td>M2 x 3 mm screws</td><td>4</td></tr>
+    <tr><td>Keycaps and key stickers</td><td>40</td></tr>
+  </table>
+  <p>You also need a USB-C <b>data</b> cable. A charge-only cable powers the board but the PC won't see it.</p>
+
+  <h3 id="lcd">Fitting the LCD</h3>
+  <ol class="steps">
+    <li>Fix the two brackets to the LCD module.</li>
+    <li>Hold the module over the board and adjust the brackets until they line up with the PCB holes. Do this <b>before</b> you connect the cable - the FFC doesn't like being pulled.</li>
+    <li>Open the locking tab of the LCD connector on the board.</li>
+    <li>Slide the cable fully in and close the tab.</li>
+    <li>Fix the brackets to the board with the four M2 x 3 mm screws.</li>
+  </ol>
+  <div class="callout warn"><div>If the screen stays white or shows stripes, the cable is not fully in. Open the tab, reseat the cable, close it again.</div></div>
+
+  <h3 id="first">First power on</h3>
+  <p>Plug in the USB cable. The Rimer logo appears for a moment, then the shell starts and prints what it found:</p>
+<pre class="term">Rimer shell v0.72
+-- Rimer App V0.64
+-- 101234 bytes free
+Init: *********** [11]
+<span class="p">sys&gt;</span><span class="u">_</span></pre>
+  <p>Every <code>*</code> on the <code>Init</code> line is an interface that started; a <code>!</code> means one failed (usually the SD card, if there is none). The last line is the prompt. <code>sys</code> is the active interface - more about that in <a href="#shell">chapter 5</a>.</p>
+
+  <p>Try a few commands. Type them and press <kbd>ENTER</kbd>:</p>
+<pre class="term"><span class="p">sys&gt;</span><span class="u">ver</span>
+Rimer shell v0.72
+-- Rimer App V0.64
+<span class="p">sys&gt;</span><span class="u">aio:</span>
+<span class="p">aio&gt;</span><span class="u">vbat</span>
+3.912
+<span class="p">aio&gt;</span><span class="u">set:</span>
+<span class="p">set&gt;</span><span class="u">bright 40</span>
+<span class="p">set&gt;</span></pre>
+  <p><code>aio:</code> switches to the analog interface, where <code>vbat</code> reads the battery. <code>set:</code> switches to the settings, where <code>bright</code> sets the backlight. Chapter 5 explains interfaces.</p>
+
+  <h3 id="battery">Battery</h3>
+  <p>The board takes a single Li-Ion cell: a flat 20 x 60 mm LiPo on the 2-pin JST PH connector, or an 18650 cell in the holder. It charges whenever USB is connected; the <b>Charge</b> LED is on while charging.</p>
+  <div class="callout warn"><div><b>Use protected cells only</b> - a LiPo pack or 18650 cell with its own protection circuit. The board has no fuse and no temperature control while charging; the cell's protection is what stops over-current and deep discharge.</div></div>
+  <div class="callout warn"><div>Check the polarity of a LiPo plug before connecting it. JST PH leads are not wired the same by every seller.</div></div>
+  <p><code>sys:off</code> turns the board off. To switch it on again, press <b>RESET</b> on the left edge. The <b>POWER</b> button above it is reserved for a future firmware version.</p>
+</section>
+
+<!-- ================================================================ 4 KEYBOARD -->
+<section class="chapter" id="keyboard">
+  <div class="chapter-head"><div class="num">4</div><h2>The keyboard</h2><div class="sub">40 keys, four layers</div></div>
+
+  <p class="opening">The keyboard follows the ZX Spectrum layout: forty keys, no separate number pad or function row. Two shift keys, <kbd>CAPS SHIFT</kbd> and <kbd class="ss">SYMBOL SHIFT</kbd>, give every key up to four meanings. It looks tight on paper and is quick in practice.</p>
+
+  <figure class="wide">
+    <img src="img/keyboard.jpg" alt="Rimer keyboard legends">
+    <figcaption><b>Keycap legends.</b> White: the key and its <kbd>CAPS SHIFT</kbd> character. Yellow: <kbd class="ss">SYMBOL SHIFT</kbd>. Arrows and editing keys are explained below.</figcaption>
+  </figure>
+
+  <h3 id="key-legends">Reading a key</h3>
+  <figure>
+  <svg viewBox="0 0 760 250" role="img" aria-label="Key legend positions"><style>text{paint-order:stroke;stroke:#fff;stroke-width:3.2px;stroke-linejoin:round}text[fill="#fff"],text[fill="#ffffff"],text[fill="#ffd400"],.kw,.ky,.kg,.pm,.pn{stroke:none}
+      .kc{fill:#000;stroke:#7a1010;stroke-width:3}
+      .kw{fill:#fff;font-size:44px;font-style:italic}
+      .ky{fill:url(#hatchY);font-size:22px}
+      .kg{fill:#c9c08a;font-size:30px}
+      .ct{font-size:13.5px;fill:#23262a}
+      .cs{font-size:12px;fill:#5d636b}
+      .cl{stroke:#111;stroke-width:1.2;fill:none}
+      .dt{fill:#ffd400;stroke:#111;stroke-width:1}
+    </style><g filter="url(#pen)">
+    
+    <rect class="kc" x="290" y="30" width="190" height="190" rx="16"/>
+    <text class="kw" x="312" y="92">5</text>
+    <text class="kg" x="410" y="88">⇦</text>
+    <text class="ky" x="310" y="192">Home</text>
+    <text fill="#fff" font-size="30" x="430" y="192">%</text>
+
+    <path class="cl" d="M290 76H150"/><circle class="dt" cx="296" cy="76" r="3.5"/>
+    <text class="ct" x="20" y="72" font-weight="700">5</text><text class="cs" x="20" y="90">key alone</text>
+
+    <path class="cl" d="M480 78H560"/><circle class="dt" cx="474" cy="78" r="3.5"/>
+    <text class="ct" x="570" y="72" font-weight="700">SS + 5</text><text class="cs" x="570" y="90">cursor left</text>
+
+    <path class="cl" d="M290 185H150"/><circle class="dt" cx="296" cy="185" r="3.5"/>
+    <text class="ct" x="20" y="180" font-weight="700">CS + SS + 5</text><text class="cs" x="20" y="198">Home</text>
+
+    <path class="cl" d="M480 183H560"/><circle class="dt" cx="474" cy="183" r="3.5"/>
+    <text class="ct" x="570" y="180" font-weight="700">CS + 5</text><text class="cs" x="570" y="198">%</text>
+  </g></svg>
+  <figcaption><b>One key, four characters.</b> CS = <kbd>CAPS SHIFT</kbd>, SS = <kbd class="ss">SYMBOL SHIFT</kbd>. Hold the shift key(s) first, then press the key.</figcaption>
+  </figure>
+
+  <table>
+    <thead><tr><th>Hold</th><th>Letters</th><th>Digits</th></tr></thead>
+    <tr><td>nothing</td><td>lower case</td><td>digits</td></tr>
+    <tr><td><kbd>CS</kbd></td><td>upper case</td><td><code>! @ # $ % &amp; ' ( ) _</code></td></tr>
+    <tr><td><kbd class="ss">SS</kbd></td><td>the yellow symbol</td><td>cursor and editing keys</td></tr>
+    <tr><td><kbd>CS</kbd> + <kbd class="ss">SS</kbd></td><td>Ctrl + letter</td><td>Home, End, PgUp, PgDn, Delete</td></tr>
+  </table>
+  <p>Keys repeat when held. <kbd>ENTER</kbd> and <kbd>SPACE</kbd> work as expected.</p>
+
+  <div class="callout tip"><div><b>BREAK</b> is <kbd>CS</kbd> + <kbd>SPACE</kbd>. It stops whatever is running - a looped command, a script, a BASIC program. Remember this one.</div></div>
+
+  <h3 id="key-control">Cursor and editing keys</h3>
+  <table>
+    <thead><tr><th>Keys</th><th>Function</th><th>Keys</th><th>Function</th></tr></thead>
+    <tr><td><kbd class="ss">SS</kbd> <kbd>5</kbd></td><td>Left</td><td><kbd class="ss">SS</kbd> <kbd>1</kbd></td><td>Esc</td></tr>
+    <tr><td><kbd class="ss">SS</kbd> <kbd>6</kbd></td><td>Down</td><td><kbd class="ss">SS</kbd> <kbd>0</kbd></td><td>Backspace</td></tr>
+    <tr><td><kbd class="ss">SS</kbd> <kbd>7</kbd></td><td>Up</td><td><kbd class="ss">SS</kbd> <kbd>Q</kbd></td><td>Tab</td></tr>
+    <tr><td><kbd class="ss">SS</kbd> <kbd>8</kbd></td><td>Right</td><td><kbd>CS</kbd> <kbd class="ss">SS</kbd> <kbd>0</kbd></td><td>Delete</td></tr>
+    <tr><td><kbd>CS</kbd> <kbd class="ss">SS</kbd> <kbd>5</kbd></td><td>Home</td><td><kbd>CS</kbd> <kbd class="ss">SS</kbd> <kbd>8</kbd></td><td>End</td></tr>
+    <tr><td><kbd>CS</kbd> <kbd class="ss">SS</kbd> <kbd>7</kbd></td><td>Page up</td><td><kbd>CS</kbd> <kbd class="ss">SS</kbd> <kbd>6</kbd></td><td>Page down</td></tr>
+  </table>
+  <p>The keyboard sends standard VT100 sequences for these, so programs see the same codes they would get from a PC terminal.</p>
+</section>
+
+<!-- ================================================================ 5 SHELL -->
+<section class="chapter" id="shell">
+  <div class="chapter-head"><div class="num">5</div><h2>Working with the shell</h2><div class="sub">rshell, interfaces and the command line</div></div>
+
+  <p class="opening">Everything on Rimer is done from the shell. There are no menus and no icons; you type a command and it runs. Commands are grouped by what they control, and once you know how the groups work, the rest follows.</p>
+
+  <h3 id="interfaces">Interfaces</h3>
+  <p>A group of commands is called an <b>interface</b>. <code>sd</code> has the SD card commands, <code>dio</code> the digital IO commands, <code>set</code> the settings, and so on. <code>iface</code> lists them all:</p>
+<pre class="term"><span class="p">sys&gt;</span><span class="u">iface</span>
+ sys : System hardware control
+ utl : Comand line utility
+ set : System settings
+ aio : Analog IO ports control
+ dio : Digital IO ports control
+ sio : Serial IO ports control
+ eep : EEPROM llfs control
+ sd : sd card FAT control
+ bas : BasicD interpreter
+ mem : Memory read/write
+ zx : ZX Spectrum Emulator</pre>
+
+  <p>The prompt shows the <b>active</b> interface. To change it, type the name with a colon. Rimer remembers the choice after power off.</p>
+<pre class="term"><span class="p">sys&gt;</span><span class="u">sd:</span>
+<span class="p">sd&gt;</span><span class="u">ls</span>
+[ zx80 ]
+1043 snake.bas
+212 test.rs
+<span class="p">sd&gt;</span></pre>
+
+  <p>You don't have to switch to use a command. Put the interface in front of it:</p>
+<pre class="term"><span class="p">sys&gt;</span><span class="u">sd:ls</span></pre>
+
+  <p><code>help</code> (or <code>?</code>) lists the commands of the active interface. <code>help dio</code> lists another one.</p>
+<pre class="term"><span class="p">sys&gt;</span><span class="u">help aio</span>
+[ aio ]
+  adc - ADC voltage
+  dac - DAC voltage
+  vbat - Battery voltage
+  vio - Vio voltage
+  beep - Beep</pre>
+
+  <h3 id="lookup">How a command is found</h3>
+  <p>When you type a command without an interface name, the shell searches in a fixed order and runs the first match:</p>
+
+  <figure>
+  <svg viewBox="0 0 760 270" role="img" aria-label="Command lookup order"><defs><marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M0 0L10 5L0 10z" fill="#23262a"/></marker></defs><style>text{paint-order:stroke;stroke:#fff;stroke-width:3.2px;stroke-linejoin:round}text[fill="#fff"],text[fill="#ffffff"],text[fill="#ffd400"],.kw,.ky,.kg,.pm,.pn{stroke:none}
+      .q{fill:#fff;stroke:#111;stroke-width:1.5}
+      .qy{fill:url(#hatchY);stroke:#111;stroke-width:1.5}
+      .qk{fill:#23262a}
+      .qt{font-size:13.5px;fill:#23262a}
+      .qb{font-size:13.5px;fill:#23262a;font-weight:700}
+      .qs{font-size:11.5px;fill:#5d636b}
+      .ql{stroke:#111;stroke-width:1.6;fill:none}
+    </style><g filter="url(#pen)">
+    
+    
+    <rect class="qk" x="20" y="105" width="120" height="56" rx="28"/><text x="80" y="138" text-anchor="middle" font-size="14" fill="#ffd400" font-family="monospace">ls</text>
+    <rect class="q" x="185" y="20" width="150" height="62" rx="6"/><text class="qb" x="260" y="46" text-anchor="middle">1 · Active</text><text class="qs" x="260" y="66" text-anchor="middle">interface (prompt)</text>
+    <rect class="q" x="185" y="102" width="150" height="62" rx="6"/><text class="qb" x="260" y="128" text-anchor="middle">2 · Built-in</text><text class="qs" x="260" y="148" text-anchor="middle">help, echo, rs, path…</text>
+    <rect class="q" x="185" y="184" width="150" height="62" rx="6"/><text class="qb" x="260" y="210" text-anchor="middle">3 · Path</text><text class="qs" x="260" y="230" text-anchor="middle">interfaces you added</text>
+    <rect class="qy" x="420" y="102" width="130" height="62" rx="6"/><text class="qb" x="485" y="138" text-anchor="middle">Run it</text>
+    <rect class="q" x="420" y="184" width="300" height="62" rx="6"/><text class="qt" x="438" y="210">not found:</text><text x="438" y="230" font-size="12.5" fill="#b3261e" font-family="monospace">E: Invalid command "ls"</text>
+    <path class="ql" d="M140 133H160V51H185" marker-end="url(#a3)"/>
+    <path class="ql" d="M260 82V102" marker-end="url(#a3)"/><path class="ql" d="M260 164V184" marker-end="url(#a3)"/>
+    <path class="ql" d="M335 51H380V133H420" marker-end="url(#a3)"/>
+    <path class="ql" d="M335 133H420" marker-end="url(#a3)"/>
+    <path class="ql" d="M335 205H380V133" /><path class="ql" d="M335 225H420" marker-end="url(#a3)"/>
+    <text class="qs" x="345" y="45">found</text><text class="qs" x="345" y="127">found</text>
+    <text class="qs" x="272" y="96">no</text><text class="qs" x="272" y="178">no</text>
+  </g></svg>
+  <figcaption><b>Lookup order.</b> <code>sd:ls</code> skips the search and goes straight to the <code>sd</code> interface.</figcaption>
+  </figure>
+
+  <p>The <b>path</b> is a list of interfaces you use often. Add <code>sd</code> to it and <code>ls</code>, <code>cd</code> and <code>cat</code> work from anywhere without the <code>sd:</code> prefix. Keep it short - every interface in the path is searched on every command, and two interfaces with the same command name (both <code>sd</code> and <code>eep</code> have <code>ls</code>) can't both be reached that way.</p>
+<pre class="term"><span class="p">sys&gt;</span><span class="u">path -a sd</span>
+Saved: sd
+Path updated.
+<span class="p">sys&gt;</span><span class="u">ls</span>
+[ zx80 ]
+1043 snake.bas
+212 test.rs</pre>
+  <p><code>path</code> shows the list, <code>path -d sd</code> removes an entry, <code>path -d *</code> clears it.</p>
+
+  <h3 id="cmdline">More on the command line</h3>
+  <p>A few characters change how a line is executed:</p>
+  <table>
+    <thead><tr><th>Write</th><th>What it does</th></tr></thead>
+    <tr><td><code>a; b</code></td><td>runs <code>a</code>, then <code>b</code></td></tr>
+    <tr><td><code>a &gt; b</code></td><td>pipe: what <code>a</code> prints becomes the last parameters of <code>b</code></td></tr>
+    <tr><td><code>@line</code></td><td>repeats the whole line until <b>BREAK</b> or an error</td></tr>
+    <tr><td><code># text</code></td><td>comment, nothing runs</td></tr>
+    <tr><td><code>"two words"</code></td><td>one parameter, spaces and commas kept</td></tr>
+  </table>
+  <p>Parameters are separated by spaces or commas. A command that fails prints an <code>E:</code> message and the rest of the line is skipped.</p>
+
+  <figure>
+  <svg viewBox="0 0 760 150" role="img" aria-label="Pipe"><defs><marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M0 0L10 5L0 10z" fill="#23262a"/></marker></defs><style>text{paint-order:stroke;stroke:#fff;stroke-width:3.2px;stroke-linejoin:round}text[fill="#fff"],text[fill="#ffffff"],text[fill="#ffd400"],.kw,.ky,.kg,.pm,.pn{stroke:none}.pm{font-family:monospace;font-size:15px}.pl{font-size:12px;fill:#5d636b}.pb{fill:#0c0f0d}</style><g filter="url(#pen)">
+    
+    
+    <rect class="pb" x="20" y="20" width="200" height="44" rx="6"/><text class="pm" x="40" y="48" fill="#ffffff">vbat</text>
+    <rect fill="url(#hatchL)" stroke="#111" x="270" y="20" width="150" height="44" rx="6"/><text class="pm" x="300" y="48" fill="#23262a">"3.912"</text>
+    <rect class="pb" x="470" y="20" width="270" height="44" rx="6"/><text class="pm" x="488" y="48" fill="#ffffff">echo Battery: <tspan fill="#ffd400">3.912</tspan></text>
+    <path d="M220 42H270" stroke="#111" stroke-width="1.6" marker-end="url(#a4)"/>
+    <path d="M420 42H470" stroke="#111" stroke-width="1.6" marker-end="url(#a4)"/>
+    <text class="pl" x="60" y="90">first command prints</text>
+    <text class="pl" x="282" y="90">output is captured</text>
+    <text class="pl" x="490" y="90">…and added to the end of the</text>
+    <text class="pl" x="490" y="106">next command's parameters</text>
+  </g></svg>
+  <figcaption><b>Piping.</b> In the <code>aio</code> interface, <code>vbat &gt; echo Battery:</code> prints <code>Battery: 3.912</code>.</figcaption>
+  </figure>
+
+  <p>Loops are handy for watching something. This prints the battery voltage once a second until you press <b>BREAK</b>:</p>
+<pre class="term"><span class="p">sys&gt;</span><span class="u">aio:</span>
+<span class="p">aio&gt;</span><span class="u">@vbat; utl:dly 1000</span>
+3.912
+3.911
+3.909
+<span class="c">(CS + SPACE)</span></pre>
+  <p><code>echo -u</code> updates one line in place instead of scrolling:</p>
+<pre class="term"><span class="p">aio&gt;</span><span class="u">@vbat &gt; echo -u Battery:; utl:dly 500</span>
+Battery: 3.911</pre>
+
+  <h3 id="scripts">Scripts and startup</h3>
+  <p>A script is a text file on the SD card with one command line per line. Run it with <code>rs</code>. Scripts can call other scripts; a script that calls itself is refused.</p>
+<pre class="file"># blink.rs - blink pin 0 of SPORT0 five times
+dio:chan 0
+dio:dir 0 1
+dio:pin 0 1; utl:dly 200; dio:pin 0 0; utl:dly 200
+dio:pin 0 1; utl:dly 200; dio:pin 0 0; utl:dly 200
+dio:pin 0 1; utl:dly 200; dio:pin 0 0
+echo done</pre>
+<pre class="term"><span class="p">sys&gt;</span><span class="u">rs blink.rs</span>
+done</pre>
+
+  <p><code>red</code> is a small full-screen text editor for writing scripts and programs on the board itself: <code>red blink.rs</code>.</p>
+
+  <p>The <b>startup line</b> runs once after power on. Use it to set things up or to start your own script:</p>
+<pre class="term"><span class="p">sys&gt;</span><span class="u">set:</span>
+<span class="p">set&gt;</span><span class="u">startup "rs boot.rs"</span></pre>
+  <div class="callout tip"><div>Hold <b>BREAK</b> while the board starts to skip the startup line - useful if a script hangs the board. A startup line can't be a loop.</div></div>
+
+  <h3 id="settings">Your settings</h3>
+  <p>Colours, font, brightness, volume, the active interface and the startup line are saved in the EEPROM the moment you change them.</p>
+<pre class="term"><span class="p">sys&gt;</span><span class="u">set:</span>
+<span class="p">set&gt;</span><span class="u">fg yellow</span>
+<span class="p">set&gt;</span><span class="u">bg blue</span>
+<span class="p">set&gt;</span><span class="u">font 1</span></pre>
+  <table>
+    <thead><tr><th>Font</th><th>Size</th><th>Screen</th></tr></thead>
+    <tr><td>0 · Rimer</td><td>8 x 12</td><td>40 x 20 characters (default)</td></tr>
+    <tr><td>1 · Rimer</td><td>6 x 8</td><td>53 x 30</td></tr>
+    <tr><td>2 · ZX</td><td>8 x 8</td><td>40 x 30</td></tr>
+    <tr><td>3 · Serif</td><td>8 x 8</td><td>40 x 30</td></tr>
+    <tr><td>4 · Speedway</td><td>8 x 8</td><td>40 x 30</td></tr>
+  </table>
+  <p>Colours are given by name or number: <code>black blue red magenta green cyan yellow white</code> are 0-7, and the same names in capitals are the bright versions 8-15 (8 is <code>gray</code>). The first letters are enough: <code>set:fg y</code>.</p>
+</section>
+
+<!-- ================================================================ 6 PORTS -->
+<section class="chapter" id="ports">
+  <div class="chapter-head"><div class="num">6</div><h2>The IO ports</h2><div class="sub">SPORT0, SPORT1 and COMM</div></div>
+
+  <p class="opening">The ports are why I built Rimer. Each SPORT connector carries a full SERCOM and a timer, so the same six pins can be plain IO, SPI, UART, I2C or PWM. You switch between them from the shell, no reflashing.</p>
+
+  <h3 id="pinout">Pinouts</h3>
+  <figure>
+  <svg viewBox="0 0 760 330" role="img" aria-label="Port pinouts"><style>text{paint-order:stroke;stroke:#fff;stroke-width:3.2px;stroke-linejoin:round}text[fill="#fff"],text[fill="#ffffff"],text[fill="#ffd400"],.kw,.ky,.kg,.pm,.pn{stroke:none}
+      .hdr{fill:#1d1f21}
+      .pin{fill:#fff;stroke:#111;stroke-width:1.2}
+      .pn{font-size:12px;fill:#111;font-weight:700}
+      .sg{font-size:13px;fill:#23262a}
+      .sgb{font-size:13px;fill:#23262a;font-weight:700}
+      .sgs{font-size:11.5px;fill:#5d636b}
+      .ttl{font-size:15px;font-weight:800;fill:#23262a;letter-spacing:.05em}
+    </style><g filter="url(#pen)">
+    
+    <!-- SPORT0 -->
+    <text class="ttl" x="20" y="24">SPORT0 · J7</text>
+    <rect class="hdr" x="20" y="36" width="34" height="276" rx="4"/>
+    <g>
+      <rect class="pin" x="29" y="44" width="16" height="16"/><text class="pn" x="37" y="56" text-anchor="middle" fill="#000">8</text><text class="sgb" x="68" y="57">3.3 V</text><text class="sgs" x="120" y="57">switched, 300 mA</text>
+      <circle class="pin" cx="37" cy="86" r="8"/><text class="pn" x="37" y="90" text-anchor="middle" fill="#000">7</text><text class="sg" x="68" y="90">WO1</text><text class="sgs" x="120" y="90">TCC0 · PA21</text>
+      <circle class="pin" cx="37" cy="120" r="8"/><text class="pn" x="37" y="124" text-anchor="middle" fill="#000">6</text><text class="sg" x="68" y="124">WO0</text><text class="sgs" x="120" y="124">TCC0 · PA20</text>
+      <circle class="pin" cx="37" cy="154" r="8"/><text class="pn" x="37" y="158" text-anchor="middle" fill="#000">5</text><text class="sg" x="68" y="158">PAD3</text><text class="sgs" x="120" y="158">SERCOM1 · PA19</text>
+      <circle class="pin" cx="37" cy="188" r="8"/><text class="pn" x="37" y="192" text-anchor="middle" fill="#000">4</text><text class="sg" x="68" y="192">PAD2</text><text class="sgs" x="120" y="192">SERCOM1 · PA18</text>
+      <circle class="pin" cx="37" cy="222" r="8"/><text class="pn" x="37" y="226" text-anchor="middle" fill="#000">3</text><text class="sg" x="68" y="226">PAD1</text><text class="sgs" x="120" y="226">SERCOM1 · PA17</text>
+      <circle class="pin" cx="37" cy="256" r="8"/><text class="pn" x="37" y="260" text-anchor="middle" fill="#000">2</text><text class="sg" x="68" y="260">PAD0</text><text class="sgs" x="120" y="260">SERCOM1 · PA16</text>
+      <rect class="pin" x="29" y="282" width="16" height="16"/><text class="pn" x="37" y="294" text-anchor="middle" fill="#000">1</text><text class="sgb" x="68" y="294">GND</text>
+    </g>
+    <!-- SPORT1 -->
+    <text class="ttl" x="275" y="24">SPORT1 · J8</text>
+    <rect class="hdr" x="275" y="36" width="34" height="276" rx="4"/>
+    <g>
+      <rect class="pin" x="284" y="44" width="16" height="16"/><text class="pn" x="292" y="56" text-anchor="middle" fill="#000">8</text><text class="sgb" x="323" y="57">3.3 V</text><text class="sgs" x="375" y="57">switched, 300 mA</text>
+      <circle class="pin" cx="292" cy="86" r="8"/><text class="pn" x="292" y="90" text-anchor="middle" fill="#000">7</text><text class="sg" x="323" y="90">WO1</text><text class="sgs" x="375" y="90">TC2 · PA01</text>
+      <circle class="pin" cx="292" cy="120" r="8"/><text class="pn" x="292" y="124" text-anchor="middle" fill="#000">6</text><text class="sg" x="323" y="124">WO0</text><text class="sgs" x="375" y="124">TC2 · PA00</text>
+      <circle class="pin" cx="292" cy="154" r="8"/><text class="pn" x="292" y="158" text-anchor="middle" fill="#000">5</text><text class="sg" x="323" y="158">PAD3</text><text class="sgs" x="375" y="158">SERCOM2 · PA15</text>
+      <circle class="pin" cx="292" cy="188" r="8"/><text class="pn" x="292" y="192" text-anchor="middle" fill="#000">4</text><text class="sg" x="323" y="192">PAD2</text><text class="sgs" x="375" y="192">SERCOM2 · PA14</text>
+      <circle class="pin" cx="292" cy="222" r="8"/><text class="pn" x="292" y="226" text-anchor="middle" fill="#000">3</text><text class="sg" x="323" y="226">PAD1</text><text class="sgs" x="375" y="226">SERCOM2 · PA13</text>
+      <circle class="pin" cx="292" cy="256" r="8"/><text class="pn" x="292" y="260" text-anchor="middle" fill="#000">2</text><text class="sg" x="323" y="260">PAD0</text><text class="sgs" x="375" y="260">SERCOM2 · PA12</text>
+      <rect class="pin" x="284" y="282" width="16" height="16"/><text class="pn" x="292" y="294" text-anchor="middle" fill="#000">1</text><text class="sgb" x="323" y="294">GND</text>
+    </g>
+    <!-- COMM -->
+    <text class="ttl" x="530" y="24">COMM · J6</text>
+    <rect class="hdr" x="530" y="36" width="34" height="140" rx="4"/>
+    <rect class="pin" x="539" y="44" width="16" height="16"/><text class="pn" x="547" y="56" text-anchor="middle" fill="#000">4</text><text class="sgb" x="578" y="57">3.3 V</text><text class="sgs" x="630" y="57">125 mA</text>
+    <circle class="pin" cx="547" cy="86" r="8"/><text class="pn" x="547" y="90" text-anchor="middle" fill="#000">3</text><text class="sgb" x="578" y="90">GND</text>
+    <circle class="pin" cx="547" cy="120" r="8"/><text class="pn" x="547" y="124" text-anchor="middle" fill="#000">2</text><text class="sg" x="578" y="124">RX / SCL</text><text class="sgs" x="660" y="124">PB03</text>
+    <rect class="pin" x="539" y="146" width="16" height="16"/><text class="pn" x="547" y="158" text-anchor="middle" fill="#000">1</text><text class="sg" x="578" y="158">TX / SDA</text><text class="sgs" x="660" y="158">PB02</text>
+    <text class="sgs" x="530" y="205">4k7 pull-ups on RXD/TXD,</text>
+    <text class="sgs" x="530" y="222">so the port also works as I2C.</text>
+    <text class="sgs" x="530" y="255">All signals are 3.3 V and</text>
+    <text class="sgs" x="530" y="272">ESD protected.</text>
+  </g></svg>
+  <figcaption><b>Port pinouts</b> from the Rev A schematic. The ports are numbered 0, 1 and 2 (COMM) in <code>dio</code> and <code>sio</code>.</figcaption>
+  </figure>
+  <div class="callout warn"><div>The pins are 3.3 V only. Don't connect 5 V signals directly.</div></div>
+
+  <h3 id="dio">Digital IO</h3>
+  <p><code>dio</code> uses the six signal pins of a SPORT as plain IO. Pins are numbered 0-5 in connector order: PAD0-PAD3 are pins 0-3, WO0 and WO1 are pins 4 and 5. The prompt shows the active port, <code>dio:0&gt;</code>.</p>
+  <p>Switch the port power on, set pin directions, write outputs, read inputs:</p>
+<pre class="term"><span class="p">sys&gt;</span><span class="u">dio:</span>
+<span class="p">dio:0&gt;</span><span class="u">pwr on</span>
+<span class="p">dio:0&gt;</span><span class="u">dir 0 1</span>          <span class="c"># pin 0 output</span>
+0x01
+<span class="p">dio:0&gt;</span><span class="u">pin 0 1</span>          <span class="c"># pin 0 high</span>
+0x01
+<span class="p">dio:0&gt;</span><span class="u">pin</span>              <span class="c"># read all inputs</span>
+0x05</pre>
+  <p>A pin number of 6 or more means "all pins" and the value is a bit mask. Binary works with a <code>b</code> in front:</p>
+<pre class="term"><span class="p">dio:0&gt;</span><span class="u">dir 6 b001111</span>    <span class="c"># pins 0-3 outputs, 4-5 inputs</span>
+0x0f</pre>
+  <p><code>dio:save</code> stores the IO setup in the EEPROM.</p>
+
+  <h3 id="sio">Serial protocols</h3>
+  <p><code>sio</code> puts a port's SERCOM in SPI, UART or I2C mode. Choose the channel (0, 1 or 2 for COMM), the mode, and the bit rate:</p>
+<pre class="term"><span class="p">sys&gt;</span><span class="u">sio:</span>
+<span class="p">OFF:0&gt;</span><span class="u">chan 2</span>
+<span class="p">OFF:2&gt;</span><span class="u">mode 3</span>            <span class="c"># 0 OFF, 1 SPI, 2 UART, 3 I2C</span>
+<span class="p">I2C:2&gt;</span><span class="u">baud 400000</span>
+<span class="p">I2C:2&gt;</span><span class="u">pwr on</span>
+<span class="p">I2C:2&gt;</span><span class="u">scan</span>
+0x76</pre>
+  <p>The prompt always shows the mode and channel. <code>tx</code> sends up to seven bytes, <code>rx</code> receives. SPI runs up to 6 MHz; I2C at 100 kHz, 400 kHz or 1 MHz.</p>
+
+  <h3 id="aio">Analog IO</h3>
+  <p>The 3.5 mm jack carries one analog input and one analog output, both 0 to 3.0 V.</p>
+<pre class="term"><span class="p">sys&gt;</span><span class="u">aio:</span>
+<span class="p">aio&gt;</span><span class="u">dac 1.5</span>
+1.500
+<span class="p">aio&gt;</span><span class="u">adc</span>
+1.498
+<span class="p">aio&gt;</span><span class="u">vbat</span>
+3.912</pre>
+  <p><code>vbat</code> and <code>vio</code> read the battery and the IO supply. <code>beep</code> plays a short tone at the volume set with <code>set:vol</code>.</p>
+</section>
+
+<!-- ================================================================ 7 STORAGE -->
+<section class="chapter" id="storage">
+  <div class="chapter-head"><div class="num">7</div><h2>Files and storage</h2><div class="sub">SD card for your files, EEPROM for the system</div></div>
+
+  <p class="opening">Rimer has two places to keep files. The SD card holds your scripts, programs and games and can be read on any computer. The EEPROM on the board is small and holds the system settings; it survives without a card.</p>
+
+  <h3 id="sdcard">SD card</h3>
+  <p>Use a FAT formatted card. The <a href="https://github.com/RimerSBC/release/tree/main/sd_sample">sd_sample</a> folder in the release repository is a ready made card with BASIC examples and Spectrum games - copy it to the card's root.</p>
+<pre class="term"><span class="p">sd&gt;</span><span class="u">ls *.bas</span>
+1043 snake.bas
+388 sine.bas
+<span class="p">sd&gt;</span><span class="u">cat -n5 snake.bas</span>
+<span class="p">sd&gt;</span><span class="u">cd zx80</span>
+<span class="p">sd&gt;</span><span class="u">pwd</span>
+/zx80</pre>
+  <p><code>rm</code> asks before it deletes a single file. With a wildcard (<code>rm *.tmp</code>) it doesn't ask - be careful.</p>
+
+  <h3 id="eeprom">EEPROM and LLFS</h3>
+  <p>The 64 KB EEPROM is formatted with LLFS, a small file system I wrote for this kind of memory. It is split into 256 sectors of 256 bytes. Index sectors hold the file names; data sectors are chained one after another, each one pointing to the next.</p>
+
+  <figure>
+  <svg viewBox="0 0 760 210" role="img" aria-label="LLFS layout"><style>text{paint-order:stroke;stroke:#fff;stroke-width:3.2px;stroke-linejoin:round}text[fill="#fff"],text[fill="#ffffff"],text[fill="#ffd400"],.kw,.ky,.kg,.pm,.pn{stroke:none}
+      .sx{stroke:#111;stroke-width:1.2}
+      .st{font-size:12px;fill:#23262a}
+      .ss2{font-size:11px;fill:#5d636b}
+      .zl{stroke:#9aa0a6;stroke-width:1;stroke-dasharray:4 3;fill:none}
+    </style><g filter="url(#pen)">
+    
+    <rect class="sx" x="20" y="30" width="60" height="44" fill="url(#hatchY)"/><text class="st" x="50" y="56" text-anchor="middle" font-weight="700">0</text>
+    <rect class="sx" x="80" y="30" width="60" height="44" fill="#fff"/><text class="st" x="110" y="56" text-anchor="middle">1</text>
+    <rect class="sx" x="140" y="30" width="60" height="44" fill="#fff"/><text class="st" x="170" y="56" text-anchor="middle">2</text>
+    <rect class="sx" x="200" y="30" width="60" height="44" fill="#fff"/><text class="st" x="230" y="56" text-anchor="middle">3</text>
+    <rect class="sx" x="260" y="30" width="360" height="44" fill="#fff"/><text class="st" x="440" y="56" text-anchor="middle">… data sectors …</text>
+    <rect class="sx" x="620" y="30" width="60" height="44" fill="#fff"/><text class="st" x="650" y="56" text-anchor="middle">254</text>
+    <rect class="sx" x="680" y="30" width="60" height="44" fill="url(#hatchL)"/><text class="st" x="710" y="56" text-anchor="middle">255</text>
+    <text class="ss2" x="20" y="20">index</text><text class="ss2" x="680" y="20">index (spare)</text>
+    <path class="zl" d="M140 74L60 120M200 74L740 120"/>
+    <rect class="sx" x="60" y="120" width="560" height="44" fill="#fff"/><text class="st" x="340" y="146" text-anchor="middle">254 bytes of file data</text>
+    <rect class="sx" x="620" y="120" width="60" height="44" fill="url(#hatchY)"/><text class="st" x="650" y="141" text-anchor="middle" font-weight="700">COUNT</text>
+    <rect class="sx" x="680" y="120" width="60" height="44" fill="url(#hatchY)"/><text class="st" x="710" y="141" text-anchor="middle" font-weight="700">LINK</text>
+    <text class="ss2" x="620" y="186">bytes used</text><text class="ss2" x="680" y="186">next sector</text>
+    <text class="ss2" x="60" y="186">A full sector uses COUNT as data too (255 bytes). LINK = itself: last, partly filled. LINK = 0xFF: last, full.</text>
+  </g></svg>
+  <figcaption><b>LLFS layout.</b> The first index sector holds the volume header and 14 file records; every further index sector holds 15.</figcaption>
+  </figure>
+
+  <p>The system keeps three files there. You can list them with <code>eep:ls</code>:</p>
+  <table>
+    <thead><tr><th>File</th><th>Holds</th></tr></thead>
+    <tr><td><code>.rimer.conf</code></td><td>colours, font, brightness, volume, active interface, startup line</td></tr>
+    <tr><td><code>.io.conf</code></td><td>port setup saved with <code>dio:save</code></td></tr>
+    <tr><td><code>.path.list</code></td><td>the interface path</td></tr>
+  </table>
+  <p>If the EEPROM is blank or damaged, Rimer formats it at boot and writes the default settings. <code>eep:format</code> does the same on purpose - all settings go back to defaults.</p>
+  <p>The full LLFS description is on the <a href="https://github.com/RimerSBC/release/wiki/LLFS">LLFS page</a>.</p>
+</section>
+
+<!-- ================================================================ 8 APPS -->
+<section class="chapter" id="apps">
+  <div class="chapter-head"><div class="num">8</div><h2>BASIC-D and ZX Spectrum</h2><div class="sub">Programming and playing</div></div>
+
+  <p class="opening">Two bigger programs come with the firmware. BASIC-D is my own BASIC interpreter, made for poking at hardware from a few lines of code. The ZX Spectrum 48 emulator is there because the keyboard was begging for it.</p>
+
+  <h3 id="basic">BASIC-D</h3>
+  <p>Load a program from the SD card and run it:</p>
+<pre class="term"><span class="p">sys&gt;</span><span class="u">bas:</span>
+<span class="p">bas&gt;</span><span class="u">load snake.bas</span>
+<span class="p">bas&gt;</span><span class="u">run</span></pre>
+  <p><code>list</code> shows the program, <code>var</code> the variables, <code>new</code> clears it. <code>bas</code> starts the interpreter's own prompt for typing programs in. <b>BREAK</b> stops a running program.</p>
+  <p>The <a href="https://github.com/RimerSBC/release/tree/main/sd_sample">sample card</a> has more than thirty examples - graphics (<code>circ.bas</code>, <code>plot.bas</code>), signal generators (<code>sine.bas</code>, <code>saw.bas</code>, <code>pulsegen.bas</code>), a voltmeter, a BME280 sensor reader and a few games.</p>
+
+  <h3 id="zx">ZX Spectrum 48</h3>
+  <p>The emulator runs Spectrum snapshots (<code>.z80</code> and <code>.sna</code>) at the original speed. The keyboard becomes a Spectrum keyboard - same layout, same shift keys.</p>
+  <p>All emulator files live in the <code>/zx80</code> folder on the SD card: the Spectrum ROM <code>48.rom</code> and the snapshots. The emulator changes to that folder by itself, so there is no need to <code>cd</code> there.</p>
+<pre class="term"><span class="p">sys&gt;</span><span class="u">zx:</span>
+ZX Spectrum emulator
+Use "zx" to run
+<span class="p">zx&gt;</span><span class="u">load Jetpac.z80</span></pre>
+  <p><code>zx</code> starts the emulator with the Spectrum ROM, or continues the last game. Press <kbd>CS</kbd> + <kbd class="ss">SS</kbd> + <kbd>SPACE</kbd> together to get back to the shell. <code>load -d game.z80</code> opens the game in the Z80 debugger instead of running it.</p>
+</section>
+
+<!-- ================================================================ 9 FIRMWARE -->
+<section class="chapter" id="firmware">
+  <div class="chapter-head"><div class="num">9</div><h2>Firmware</h2><div class="sub">Updating, recovering, building your own</div></div>
+
+  <p class="opening">Rimer has a USB bootloader. Updating means copying one file to a drive, the same way you'd copy a photo to a USB stick. No programmer, no software to install.</p>
+
+  <h3 id="update">Updating</h3>
+  <figure>
+  <svg viewBox="0 0 760 130" role="img" aria-label="Firmware update steps"><defs><marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M0 0L10 5L0 10z" fill="#23262a"/></marker></defs><style>text{paint-order:stroke;stroke:#fff;stroke-width:3.2px;stroke-linejoin:round}text[fill="#fff"],text[fill="#ffffff"],text[fill="#ffd400"],.kw,.ky,.kg,.pm,.pn{stroke:none}.fb{fill:#fff;stroke:#111;stroke-width:1.5}.fy{fill:url(#hatchY);stroke:#111;stroke-width:1.5}.ft{font-size:13.5px;fill:#23262a;font-weight:700}.fs{font-size:11.5px;fill:#5d636b}</style><g filter="url(#pen)">
+    
+    
+    <rect class="fb" x="10" y="25" width="160" height="70" rx="8"/><text class="ft" x="90" y="55" text-anchor="middle">Reset twice</text><text class="fs" x="90" y="75" text-anchor="middle">USB connected</text>
+    <rect class="fb" x="205" y="25" width="160" height="70" rx="8"/><text class="ft" x="285" y="55" text-anchor="middle">RIMERBOOT</text><text class="fs" x="285" y="75" text-anchor="middle">drive appears on the PC</text>
+    <rect class="fy" x="400" y="25" width="160" height="70" rx="8"/><text class="ft" x="480" y="55" text-anchor="middle">Copy .uf2</text><text class="fs" x="480" y="75" text-anchor="middle">rimer_vX.XX.uf2</text>
+    <rect class="fb" x="595" y="25" width="155" height="70" rx="8"/><text class="ft" x="672" y="55" text-anchor="middle">Restart</text><text class="fs" x="672" y="75" text-anchor="middle">new version runs</text>
+    <path d="M170 60H205M365 60H400M560 60H595" stroke="#111" stroke-width="1.6" marker-end="url(#a5)"/>
+  </g></svg>
+  </figure>
+  <ol class="steps">
+    <li>Download the latest <code>rimer_vX.XX.uf2</code> from the <a href="https://github.com/RimerSBC/release/tree/main/images">images</a> folder.</li>
+    <li>Connect Rimer to the PC with a USB data cable.</li>
+    <li>Press reset twice, quickly. The bootloader screen appears and a drive named <code>RIMERBOOT</code> shows up on the PC. It contains <code>CURRENT.UF2</code>, <code>INDEX.HTM</code> and <code>INFO_UF2.TXT</code>.</li>
+    <li>Copy the <code>.uf2</code> file to the drive. The drive disappears when the copy is done and Rimer restarts with the new firmware.</li>
+  </ol>
+  <p>Your settings and EEPROM files are kept.</p>
+
+  <h3 id="swd">Programming a blank board</h3>
+  <p>Only needed on a new board or if the bootloader is damaged. You need an SWD programmer (I use a J-Link) on connector J1.</p>
+  <ol class="steps">
+    <li>Fit the LCD and connect USB.</li>
+    <li>Connect the SWD programmer to J1.</li>
+    <li>Program <a href="https://github.com/RimerSBC/release/blob/main/uf2.hex">uf2.hex</a> - this is the bootloader.</li>
+    <li>The Rimer logo and the bootloader screen appear, and <code>RIMERBOOT</code> shows up on the PC.</li>
+    <li>Copy the latest <code>rimer_vX.XX.uf2</code> to it, as in an update.</li>
+  </ol>
+
+  <h3 id="own">Your own firmware</h3>
+  <p>The firmware is split so that you don't have to build everything to add your own code. <a href="https://github.com/RimerSBC/ucosR">ucosR</a> compiles into <code>libucosR.a</code> with the kernel, drivers and shell. An application links the library and registers its own interfaces:</p>
+<pre class="file">#include "rshell.h"
+
+static cmd_err_t cmd_hello(_cl_param_t *sParam)
+{
+    tprintf("Hello, %s!\n", sParam->argc ? sParam->argv[0] : "Rimer");
+    return CMD_NO_ERR;
+}
+
+const _iface_t ifaceHello =
+{
+    .name = "hi",
+    .prompt = NULL,
+    .desc = "My first interface",
+    .init = NULL,
+    .cmdList =
+    {
+        { .name = "hello", .desc = "Say hello [name]", .func = cmd_hello },
+        { .name = NULL, .func = NULL },
+    }
+};
+
+void interface_register(void)   // overrides the weak one in ucosR
+{
+    add_interface(&amp;ifaceHello);
+}</pre>
+<pre class="term"><span class="p">sys&gt;</span><span class="u">hi:</span>
+<span class="p">hi&gt;</span><span class="u">hello world</span>
+Hello, world!</pre>
+  <p>A command gets its parameters in <code>sParam</code> and returns <code>CMD_NO_ERR</code> or an error string, which the shell prints after <code>E:</code>. Build with the ARM GCC toolchain, convert the binary with <code>uf2conv</code> (in the release repository) and copy it to <code>RIMERBOOT</code>.</p>
+</section>
+
+<!-- ================================================================ A REFERENCE -->
+<section class="chapter" id="ref">
+  <div class="chapter-head"><div class="num appx">A</div><h2>Command reference</h2><div class="sub">Every command in firmware V0.64</div></div>
+  <p>Square brackets are optional parameters. Numbers can be decimal or hex (<code>0x1F</code>).</p>
+
+  <div class="ref"><header><code>/</code><span>built-in, always available</span></header><table>
+    <tr><td><code>help [iface]</code></td><td>list commands; <code>?</code> is the same</td></tr>
+    <tr><td><code>ver</code></td><td>shell and firmware version</td></tr>
+    <tr><td><code>iface</code></td><td>list interfaces</td></tr>
+    <tr><td><code>echo [-e|-h|-c|-u] text</code></td><td>print text. <code>-e</code> no new line, <code>-h</code> back to line start, <code>-c</code> clear the line first, <code>-u</code> clear and stay (update in place)</td></tr>
+    <tr><td><code>path [-a list | -d list | -d *]</code></td><td>show, add to, remove from or clear the path</td></tr>
+    <tr><td><code>cls</code></td><td>clear the screen</td></tr>
+    <tr><td><code>rs file</code></td><td>run a script from the SD card</td></tr>
+    <tr><td><code>red [file]</code></td><td>text editor</td></tr>
+  </table></div>
+
+  <div class="ref"><header><code>sys</code><span>system</span></header><table>
+    <tr><td><code>reboot</code></td><td>restart</td></tr>
+    <tr><td><code>off</code></td><td>power off</td></tr>
+  </table></div>
+
+  <div class="ref"><header><code>utl</code><span>utilities</span></header><table>
+    <tr><td><code>hex value</code></td><td>print a number in hex</td></tr>
+    <tr><td><code>dec b1 [b2 …]</code></td><td>make a number from a list of bytes</td></tr>
+    <tr><td><code>dly ms</code></td><td>wait, in milliseconds</td></tr>
+  </table></div>
+
+  <div class="ref"><header><code>set</code><span>settings, saved immediately</span></header><table>
+    <tr><td><code>fg colour</code></td><td>text colour, name or 0-15</td></tr>
+    <tr><td><code>bg colour</code></td><td>background colour, name or 0-15</td></tr>
+    <tr><td><code>bright [1-100]</code></td><td>backlight in %; without a value shows it</td></tr>
+    <tr><td><code>font [0-4]</code></td><td>system font; without a value shows it</td></tr>
+    <tr><td><code>vol 0-100</code></td><td>speaker volume in %</td></tr>
+    <tr><td><code>startup "line"</code></td><td>command line to run at power on</td></tr>
+  </table></div>
+
+  <div class="ref"><header><code>aio</code><span>analog IO</span></header><table>
+    <tr><td><code>adc</code></td><td>input voltage on the jack, 0-3.0 V</td></tr>
+    <tr><td><code>dac [volts]</code></td><td>set the output voltage 0-3.0 V; without a value shows it</td></tr>
+    <tr><td><code>vbat</code></td><td>battery voltage</td></tr>
+    <tr><td><code>vio</code></td><td>IO supply voltage</td></tr>
+    <tr><td><code>beep</code></td><td>short beep</td></tr>
+  </table></div>
+
+  <div class="ref"><header><code>dio</code><span>digital IO, active port in the prompt</span></header><table>
+    <tr><td><code>chan [0|1]</code></td><td>select the port</td></tr>
+    <tr><td><code>pwr [chan] on|off</code></td><td>port 3.3 V on or off</td></tr>
+    <tr><td><code>dir [pin [val [chan]]]</code></td><td>direction, 1 = output. Pin 6+ = all pins, value is a mask</td></tr>
+    <tr><td><code>pin [pin [val [chan]]]</code></td><td>write an output; without parameters reads the inputs</td></tr>
+    <tr><td><code>save</code></td><td>save the IO setup</td></tr>
+  </table></div>
+
+  <div class="ref"><header><code>sio</code><span>serial IO, mode and port in the prompt</span></header><table>
+    <tr><td><code>chan 0|1|2</code></td><td>select the port (2 = COMM)</td></tr>
+    <tr><td><code>mode 0-3</code></td><td>OFF, SPI, UART, I2C</td></tr>
+    <tr><td><code>baud rate</code></td><td>bit rate. SPI up to 6 MHz, I2C 100k / 400k / 1M</td></tr>
+    <tr><td><code>pwr on|off</code></td><td>port 3.3 V on or off</td></tr>
+    <tr><td><code>tx b1 [… b7]</code></td><td>send up to 7 bytes</td></tr>
+    <tr><td><code>rx size [mode/addr/tx]</code></td><td>receive bytes</td></tr>
+    <tr><td><code>scan</code></td><td>list devices on the I2C bus</td></tr>
+  </table></div>
+
+  <div class="ref"><header><code>sd</code><span>SD card</span></header><table>
+    <tr><td><code>ls [pattern]</code></td><td>list files, <code>*</code> wildcards</td></tr>
+    <tr><td><code>cd dir</code></td><td>change directory</td></tr>
+    <tr><td><code>pwd</code></td><td>current directory</td></tr>
+    <tr><td><code>cat [-v] [-nN] file</code></td><td>show a file; <code>-v</code> shows control characters, <code>-nN</code> only the first N lines</td></tr>
+    <tr><td><code>rm file | pattern</code></td><td>delete; asks only for a single file</td></tr>
+    <tr><td><code>sdi</code></td><td>card information</td></tr>
+    <tr><td><code>sdrd block [count]</code></td><td>raw block dump</td></tr>
+  </table></div>
+
+  <div class="ref"><header><code>eep</code><span>EEPROM files (LLFS)</span></header><table>
+    <tr><td><code>ls [pattern]</code></td><td>list files and sizes</td></tr>
+    <tr><td><code>df</code></td><td>free space</td></tr>
+    <tr><td><code>rm name | pattern</code></td><td>delete</td></tr>
+    <tr><td><code>touch name</code></td><td>create an empty file</td></tr>
+    <tr><td><code>format</code></td><td>format; all settings are lost</td></tr>
+  </table></div>
+
+  <div class="ref"><header><code>mem</code><span>memory</span></header><table>
+    <tr><td><code>eer addr [count]</code></td><td>EEPROM hex dump</td></tr>
+    <tr><td><code>eew addr b1 [… b8]</code></td><td>write raw bytes to the EEPROM - can break LLFS</td></tr>
+    <tr><td><code>mf</code></td><td>heap total, used, free</td></tr>
+  </table></div>
+
+  <div class="ref"><header><code>bas</code><span>BASIC-D</span></header><table>
+    <tr><td><code>load file</code></td><td>load a program from the SD card</td></tr>
+    <tr><td><code>run</code></td><td>run it</td></tr>
+    <tr><td><code>list</code></td><td>list it</td></tr>
+    <tr><td><code>new</code></td><td>clear it</td></tr>
+    <tr><td><code>var</code></td><td>list variables</td></tr>
+    <tr><td><code>bas</code></td><td>interpreter prompt</td></tr>
+  </table></div>
+
+  <div class="ref"><header><code>zx</code><span>ZX Spectrum 48</span></header><table>
+    <tr><td><code>zx [addr]</code></td><td>start or continue, optionally from an address</td></tr>
+    <tr><td><code>load [-d] file</code></td><td>load a <code>.z80</code> or <code>.sna</code> snapshot; <code>-d</code> opens the debugger</td></tr>
+    <tr><td><code>dbg</code></td><td>Z80 debugger</td></tr>
+  </table></div>
+</section>
+
+<!-- ================================================================ B SPECS -->
+<section class="chapter" id="specs">
+  <div class="chapter-head"><div class="num appx">B</div><h2>Specifications</h2><div class="sub">Board V1.0 Rev A</div></div>
+  <table class="spec">
+    <tr><th>MCU</th><td>Microchip ATSAMD51J20A, ARM Cortex-M4F, 120 MHz from a 12 MHz crystal</td></tr>
+    <tr><th>Flash / RAM</th><td>1 MB / 256 KB</td></tr>
+    <tr><th>EEPROM</th><td>64 KB, CAT24C512, I2C</td></tr>
+    <tr><th>Display</th><td>3.2" IPS TFT, 320 x 240, ST7789V2 or ILI9341, 40-pin 0.5 mm FFC, PWM backlight</td></tr>
+    <tr><th>Frame buffer</th><td>8 bit per pixel (RGB 3-3-2), DMA refresh, up to 60 fps</td></tr>
+    <tr><th>Keyboard</th><td>40 Kailh Choc low profile switches, PI4IOE5V9554 I2C scanner</td></tr>
+    <tr><th>Storage</th><td>microSD (SDHC 4-bit), 64 KB EEPROM with LLFS</td></tr>
+    <tr><th>Audio</th><td>PAM8304 class-D, 700 mW onboard speaker</td></tr>
+    <tr><th>Analog</th><td>1 x ADC in, 1 x DAC out, 0-3.0 V, MCP6402 buffer, 3.5 mm jack</td></tr>
+    <tr><th>SPORT0, SPORT1</th><td>8-pin 2.54 mm, 6 signals each (SERCOM + 2 timer outputs), switched 3.3 V @ 300 mA with fault sense</td></tr>
+    <tr><th>COMM</th><td>4-pin 2.54 mm, UART or I2C, 4k7 pull-ups, switched 3.3 V @ 125 mA</td></tr>
+    <tr><th>USB</th><td>USB 2.0 full speed device, USB-C</td></tr>
+    <tr><th>Power</th><td>USB-C 5 V or one Li-Ion cell (20 x 60 mm LiPo on JST PH-2, or 18650), MCP73832 charger, 3.3 V / 2 A buck</td></tr>
+    <tr><th>Programming</th><td>USB UF2 bootloader, SWD on J1</td></tr>
+    <tr><th>Size</th><td>200 x 140 mm, 1.6 mm PCB</td></tr>
+  </table>
+  <p>How the hardware works: <a href="hardware.html">hardware manual</a>. Drawings (PDF): <a href="files/rimer_schematics.pdf">schematics</a> · <a href="files/rimer_mech_layout.pdf">mechanical layout</a></p>
+
+  <h3>More</h3>
+  <ul>
+    <li><a href="hardware.html">Hardware manual</a> - every block of the schematics explained</li>
+    <li><a href="https://hackaday.io/project/202450-rimer-sbc">Rimer SBC on Hackaday</a></li>
+    <li><a href="https://github.com/orgs/RimerSBC/repositories">Source code</a></li>
+    <li><a href="https://github.com/RimerSBC/release">Release files</a> - firmware images, sample SD card, uf2conv</li>
+  </ul>
+
+  <footer>
+    &copy; 2025 Sergey Sanders, Sesa Design Inc. · Licensed under <a href="http://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>
+  </footer>
+</section>
+
+</div></main>
+
+<script>
+/* highlight the section being read in the contents panel */
+(function () {
+  var links = [].slice.call(document.querySelectorAll('nav.toc a[href^="#"]'));
+  var targets = links.map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); });
+  function update() {
+    var y = window.scrollY + 120, cur = 0;
+    targets.forEach(function (t, i) { if (t && t.getBoundingClientRect().top + window.scrollY <= y) cur = i; });
+    links.forEach(function (a, i) { a.classList.toggle('active', i === cur); });
+  }
+  addEventListener('scroll', update, { passive: true });
+  update();
+})();
+</script>
+</body>
+</html>

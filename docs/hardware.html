@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rimer SBC - Hardware Manual</title>
+<link rel="icon" href="img/logo.png">
+<link rel="stylesheet" href="assets/manual.css">
+</head>
+<body>
+
+<nav class="toc" aria-label="Contents">
+  <a class="brand" href="#top"><img src="img/logo.png" alt=""><div><b>Rimer SBC</b><span>Hardware manual · board V1.0 Rev A</span></div></a>
+  <ol>
+    <li><a href="#overview">Overview</a>
+      <ol>
+        <li><a href="#ov-idea">One chip does it all</a></li>
+        <li><a href="#ov-sheets">The sheets</a></li>
+      </ol>
+    </li>
+    <li><a href="#power">Power</a>
+      <ol>
+        <li><a href="#pw-usb">USB-C entry</a></li>
+        <li><a href="#pw-path">Power path</a></li>
+        <li><a href="#pw-charger">Charger</a></li>
+        <li><a href="#pw-rails">The rails</a></li>
+        <li><a href="#pw-i2c">I2C peripherals power</a></li>
+      </ol>
+    </li>
+    <li><a href="#display">Display</a>
+      <ol>
+        <li><a href="#dp-bus">Serial in, parallel out</a></li>
+        <li><a href="#dp-colour">8 bits become 16</a></li>
+        <li><a href="#dp-rest">Backlight, reset, touch</a></li>
+      </ol>
+    </li>
+    <li><a href="#keyboard">Keyboard</a></li>
+    <li><a href="#analog">Analog IO</a>
+      <ol>
+        <li><a href="#an-jack">The jack</a></li>
+        <li><a href="#an-speaker">Speaker amplifier</a></li>
+        <li><a href="#an-vbat">Battery sense</a></li>
+      </ol>
+    </li>
+    <li><a href="#digital">Digital IO</a>
+      <ol>
+        <li><a href="#dg-switch">Port power switches</a></li>
+        <li><a href="#dg-ports">SPORT and COMM</a></li>
+        <li><a href="#dg-sd">SD card</a></li>
+      </ol>
+    </li>
+    <li><a href="#mcu">MCU</a>
+      <ol>
+        <li><a href="#mc-supply">Supply and core regulator</a></li>
+        <li><a href="#mc-clock">Clock</a></li>
+        <li><a href="#mc-reset">Reset, POWER and SWD</a></li>
+        <li><a href="#mc-i2c">System I2C and EEPROM</a></li>
+        <li><a href="#mc-series">Series resistors</a></li>
+      </ol>
+    </li>
+    <li class="appx"><a href="#pinmap">A · MCU pin map</a></li>
+  </ol>
+</nav>
+
+<main id="top"><div class="page">
+
+<header class="cover">
+  <span class="kicker">Hardware manual</span>
+  <h1>Rimer SBC</h1>
+  <p>How the board works, block by block, and why it is built the way it is.</p>
+  <div class="meta">Board V1.0 Rev A · schematics <a href="files/rimer_schematics.pdf">rimer_schematics.pdf</a> · see also the <a href="index.html">user manual</a></div>
+</header>
+
+<!-- ============================================================ 1 OVERVIEW -->
+<section class="chapter" id="overview">
+  <div class="chapter-head"><div class="num">1</div><h2>Overview</h2><div class="sub">The top sheet and the idea behind it</div></div>
+
+  <p class="opening">Rimer is a one-chip computer. There is no FPGA, no graphics controller, no USB bridge and no keyboard controller. The ATSAMD51 does all of it, and the rest of the board is there to feed it power, protect its pins and translate its signals for the outside world.</p>
+
+  <figure class="wide sheet">
+    <a href="img/sch/overview.png"><img src="img/sch/overview.png" alt="Top-level schematic"></a>
+    <figcaption><b>Top sheet.</b> The MCU in the middle; power and digital IO on the left; display, keyboard and analog IO on the right. Click any sheet for full size.</figcaption>
+  </figure>
+
+  <h3 id="ov-idea">One chip does it all</h3>
+  <p>The SAMD51 has six SERCOMs, eight timers, two 12-bit ADCs, a two-channel DAC, an SD host controller, USB and a DMA controller with 32 channels. That is enough to give every function on the board its own peripheral, so nothing has to be shared or bit-banged:</p>
+  <table>
+    <thead><tr><th>Function</th><th>Peripheral</th></tr></thead>
+    <tr><td>Display</td><td>SERCOM4 (SPI) + DMA, TC4 for the bus mux and the backlight, TC6 for touch and tearing</td></tr>
+    <tr><td>Keyboard, EEPROM, touch</td><td>SERCOM3 (I2C)</td></tr>
+    <tr><td>SPORT0</td><td>SERCOM1 + TCC0</td></tr>
+    <tr><td>SPORT1</td><td>SERCOM2 + TC2</td></tr>
+    <tr><td>COMM</td><td>SERCOM5</td></tr>
+    <tr><td>SD card</td><td>SDHC0, 4-bit</td></tr>
+    <tr><td>Analog jack, speaker</td><td>DAC0, DAC1, ADC0</td></tr>
+    <tr><td>Battery</td><td>ADC1</td></tr>
+    <tr><td>PC</td><td>USB full speed</td></tr>
+  </table>
+
+  <h3 id="ov-sheets">The sheets</h3>
+  <p>The schematic is split into six sheets under the top sheet. The rest of this manual follows them in this order: power, display, keyboard, analog IO, digital IO, and the MCU last, because everything else connects to it and the pin map makes more sense once you have seen what is on the other end.</p>
+  <p>Three supply names appear everywhere:</p>
+  <table>
+    <thead><tr><th>Rail</th><th>What it is</th></tr></thead>
+    <tr><td><code>3V3</code></td><td>always on while there is any power - the MCU, the I2C pull-ups</td></tr>
+    <tr><td><code>VDD</code></td><td>switched 3.3 V for everything the MCU can turn off: display, keyboard, SD card, audio, IO ports</td></tr>
+    <tr><td><code>3V0A</code></td><td>quiet 3.0 V, the reference for the ADC and DAC</td></tr>
+  </table>
+</section>
+
+<!-- ============================================================ 2 POWER -->
+<section class="chapter" id="power">
+  <div class="chapter-head"><div class="num">2</div><h2>Power</h2><div class="sub">USB-C, battery and the rails</div></div>
+
+  <p class="opening">The power sheet has one job: run the board from USB or a single Li-Ion cell, charge the cell when USB is there, and switch between the two without a glitch. Everything else on the sheet is protection or a rail derived from that.</p>
+
+  <figure class="wide sheet">
+    <a href="img/sch/power.png"><img src="img/sch/power.png" alt="Power schematic"></a>
+    <figcaption><b>Power sheet.</b> USB entry top left, charger and battery below it, the rails on the right.</figcaption>
+  </figure>
+
+  <h3 id="pw-usb">USB-C entry</h3>
+  <p>J4 is a USB 2.0 type-C receptacle. Rimer is a device, so the two CC pins get the 5k1 pull-downs (R17, R22) that tell any charger or PC "I am a sink, give me 5 V". Nothing more is negotiated - 5 V at up to 500 mA from a PC port or more from a charger is plenty.</p>
+  <ul>
+    <li><b>D8</b> (SMBJ5.0A) clamps surges on VBUS. Hot-plugging cables produces spikes well above 5 V.</li>
+    <li><b>D6</b> (PESD5V2S2UT) protects D+ and D-.</li>
+    <li><b>R14, R15</b> (22 Ω) are the series resistors the SAMD51 USB needs on D+ and D-.</li>
+    <li><b>R27/R18</b> divide VBUS by two into <code>VBUS_DET</code> (PB06), so the firmware knows when a cable is plugged in without exposing the pin to 5 V.</li>
+  </ul>
+
+  <h3 id="pw-path">Power path</h3>
+  <p>The board must run from USB while the battery charges, and from the battery when the cable goes. The simplest way that works is a diode and a P-MOSFET:</p>
+  <ul>
+    <li><b>D7</b> (SX33L Schottky) feeds VBUS into the main rail <code>PWR</code>/<code>VBAT</code>. With USB connected the rail sits at about 4.7 V, above any battery voltage.</li>
+    <li><b>Q4</b> (DMP3056L) connects the battery to the same rail. Its gate is pulled up to VBUS through R38 and down to ground through R39. With USB present the gate is high and Q4 is off: the load runs from USB and the charger alone looks after the cell. Without USB R39 pulls the gate low, Q4 turns on and the battery takes over.</li>
+    <li><b>Q5</b> (DMP3056L) sits in the battery lead with its gate tied to ground through R36. It is the reverse polarity protection: with the cell the right way round Q5 is fully on and drops almost nothing; with the cell reversed its body diode blocks and the board sees nothing.</li>
+  </ul>
+  <p>Separating the load from the cell while charging matters: the MCP73832 measures the charge current to decide when the cell is full. If the board's own current flowed through the charger too, it would never see the current drop and never stop charging.</p>
+  <p>The cell goes on J11, a 2-pin JST PH (B2B-PH-K-S). BT1, the 18650 holder, is in the drawing but not fitted on Rev A boards. J10, also not fitted, is a jumper position on the battery line.</p>
+  <div class="callout warn"><div><b>Use protected cells only.</b> The board has no fuse on VBUS and no temperature control while charging (the MCP73832 has no thermistor input). Over-current, over-discharge and over-temperature protection are left to the protection circuit built into the cell, which is why the silkscreen says <i>USE PROTECTED 18650 Li-Ion BATTERY!</i> - the same applies to LiPo packs on J11.</div></div>
+
+  <h3 id="pw-charger">Charger</h3>
+  <p>U6 is an MCP73832, a single-cell linear charger. It does constant current, constant voltage and termination by itself; the MCU never has to touch it.</p>
+  <ul>
+    <li><b>R26</b> = 2 kΩ on PROG sets the charge current: I = 1000 V / 2 kΩ = 500 mA. That is safe for the small LiPo cells and still within what a USB 2.0 port gives.</li>
+    <li><b>D9</b>, the <i>Charge</i> LED, hangs on the STAT output through R24. It is lit while charging and goes off when the cell is full.</li>
+  </ul>
+
+  <h3 id="pw-rails">The rails</h3>
+  <h4>3.3 V buck</h4>
+  <p>U7 is a TPS62A02, a 2 A synchronous buck converter running from the main rail. A buck instead of an LDO, because the input is anywhere between 3.0 V (empty cell) and 4.7 V (USB); an LDO would turn most of that difference into heat and halve the battery life. The feedback divider R16/R9 (453k/100k) sets the output to 0.6 V × (1 + 453/100) = 3.32 V. When the cell is nearly empty the converter goes into 100 % duty cycle and the rail simply follows the battery down.</p>
+
+  <h4>VDD switch</h4>
+  <p>U15 (AP22652) switches 3V3 to <code>VDD</code> under control of <code>VDD_EN</code> (PB07, active low). R25 = 20k sets its current limit to about 1.3 A. Everything that is not needed to keep the MCU alive is on VDD, so <code>sys:off</code> can cut the display, keyboard, SD card and audio in one go and leave only the MCU in its lowest power mode.</p>
+
+  <h4>Analog 3.0 V</h4>
+  <p>U3 (NCP114, 3.0 V) is an LDO that makes <code>3V0A</code> from VDD. It feeds the ADC and DAC reference (VREFA, through R4) and the analog op-amps. 3.0 V and not 3.3 V on purpose: an LDO needs headroom, and a reference that sits below the supply stays clean when the digital rail has ripple.</p>
+  <p>At the very end of the battery the buck runs at 100 % duty, 3V3 follows the cell down, and below a cell voltage of about 3.2 V the LDO has no headroom left - 3V0A drops with it. In practice this is the point where a Li-Ion cell falls off sharply anyway. Anything that has to measure reliably at that point, such as the battery voltage, can switch the ADC to the SAMD51's internal reference instead of VREFA.</p>
+
+  <h3 id="pw-i2c">I2C peripherals power</h3>
+  <p>U16 is a 74LVC1G126 buffer with its input on the <code>RESET</code> line. Its output, <code>I2C_PWR</code>, powers the keyboard expander, the decoder and the EEPROM. While the MCU is held in reset those parts lose their supply; when reset is released they power up again.</p>
+  <p>The reason is recovery. An I2C slave can hang in the middle of a transfer - holding SDA low after a glitch, for example - and then no amount of clocking from the master gets it out. Cutting its supply does. With the supply tied to RESET, a reset of the board is always a full restart of the I2C bus as well, without any recovery code in the firmware. It has never happened in practice, but it costs one small gate. A single gate also has plenty of drive for the few hundred microamps these chips take.</p>
+</section>
+
+<!-- ============================================================ 3 DISPLAY -->
+<section class="chapter" id="display">
+  <div class="chapter-head"><div class="num">3</div><h2>Display</h2><div class="sub">A parallel LCD on one SPI port</div></div>
+
+  <p class="opening">The fastest way to fill a 320 x 240 screen is a parallel bus, but a parallel bus costs eighteen pins. The display sheet gets parallel-bus speed out of one SPI port and two logic chips.</p>
+
+  <figure class="wide sheet">
+    <a href="img/sch/display.png"><img src="img/sch/display.png" alt="Display schematic"></a>
+    <figcaption><b>Display sheet.</b> Shift register U2 and buffer U1 in the middle, the LCD connector J5 on the right.</figcaption>
+  </figure>
+
+  <h3 id="dp-bus">Serial in, parallel out</h3>
+  <p>The LCD (ER-TFT032IPS-3.2 with an ST7789V2 controller, or an ILI9341 module) is set to its 16-bit 8080 parallel mode by the IM pins. The MCU drives it from SERCOM4 in SPI mode at 60 MHz:</p>
+  <ul>
+    <li><b>U2</b>, a 74AHC164 shift register, takes MOSI and SCLK and turns every 8 bits into a byte on <code>LCD_D0..D7</code>.</li>
+    <li>The SPI hardware chip select, which the SERCOM pulses once per byte, is wired to the LCD's <b>WR</b> strobe. When the byte is complete in U2, WR latches it into the LCD. No CPU work, no extra pin.</li>
+    <li><b>D/C</b> is a normal GPIO; <b>CS</b> is tied low and <b>RD</b> high, because Rimer only ever writes to the display.</li>
+  </ul>
+  <p>The frame buffer is in RAM and a DMA channel streams it into the SPI port, so a full frame costs the CPU nothing. The SERCOM's inter-character space is used to set the frame rate - 50 to 66 Hz depending on the setting.</p>
+
+  <h3 id="dp-colour">8 bits become 16</h3>
+  <p>One byte per pixel keeps the frame buffer at 75 KB, which fits next to everything else in 256 KB of RAM. The LCD wants 16-bit RGB565, though. The conversion is done in wiring:</p>
+  <ul>
+    <li>The byte is RGB 3-3-2. Its three red bits go to the top of the LCD's red field, its three green bits to the top of the green field, its two blue bits to the top of the blue field.</li>
+    <li>The remaining low bits of each field come from <code>MUX_D0..D7</code>. During pixel data the buffer U1 (74AHC367) is disabled and RN1 (4k7) pulls those lines low, so each colour is simply padded with zeros.</li>
+    <li>Commands are different: the controller expects them on DB0-DB7, and those lines are a mix of direct and MUX lines. For commands <code>LCD_DMUX</code> enables U1, which copies the byte onto the MUX lines. Because of the wiring the byte arrives rotated by three bits, so the firmware rotates it the other way first (<code>_mux()</code> in <code>lcd.c</code>).</li>
+  </ul>
+  <p>The result: 256 colours on screen at a full 16-bit bus speed, from 8 bits of memory per pixel.</p>
+
+  <h3 id="dp-rest">Backlight, reset, touch</h3>
+  <ul>
+    <li><b>Backlight</b> - the LED cathodes (LEDK) go to ground through Q1 (DMN2056U), driven by <code>BL_PWM</code> from TC4 through R32. R3 keeps the backlight off while the MCU starts. <code>set:bright</code> changes the PWM duty. There is no series resistor on purpose: the panel's backlight is rated for 3.3 V and has its own current-limiting resistor, so LEDA goes straight to VDD.</li>
+    <li><b>Reset</b> - R40/C54 hold the LCD in reset for about 10 ms after power-up, then release it. One less GPIO.</li>
+    <li><b>Tearing</b> - the controller's frame mark output <code>FMARK</code> goes to TC6, so drawing can be synchronised to the panel refresh.</li>
+    <li><b>Touch</b> - the optional capacitive touch panel sits on the system I2C bus, with its interrupt <code>INT_TOUCH</code> on TC6 as well.</li>
+  </ul>
+</section>
+
+<!-- ============================================================ 4 KEYBOARD -->
+<section class="chapter" id="keyboard">
+  <div class="chapter-head"><div class="num">4</div><h2>Keyboard</h2><div class="sub">40 keys on two wires</div></div>
+
+  <p class="opening">The keyboard is the ZX Spectrum matrix: 8 rows of 5 keys. Scanning it directly would take 13 GPIOs. On Rimer it takes none - it hangs on the I2C bus that is already there for the EEPROM.</p>
+
+  <figure class="wide sheet">
+    <a href="img/sch/keyboard.png"><img src="img/sch/keyboard.png" alt="Keyboard schematic"></a>
+    <figcaption><b>Keyboard sheet.</b> I2C expander U10 and decoder U9 at the top, the 8 x 5 matrix below.</figcaption>
+  </figure>
+
+  <ul>
+    <li><b>U10</b>, a PI4IOE5V9554A I2C expander (address 0x70), has 8 IO lines. Three of them (<code>ROW_ADDR0..2</code>) select a row, five (<code>COL1..5</code>) read the columns.</li>
+    <li><b>U9</b>, an SN74HCS137 3-to-8 decoder, turns the 3-bit row address into one of eight row lines, pulled low. The row lines follow the Spectrum's half-rows: left half <code>ROW_L1..L4</code>, right half <code>ROW_R1..R4</code>.</li>
+    <li><b>RN6</b> (10k) pulls the columns up. A pressed key in the selected row pulls its column low.</li>
+    <li><b>D10-D17</b> (RB520S30 Schottky) sit in every row line. The decoder drives the unselected rows high; if two keys in the same column are pressed in different rows, the selected row and an unselected one would be shorted through the column. The diodes make the rows pull-down only, so any combination of keys is safe.</li>
+    <li><code>INT_KBD</code> is the expander's change interrupt on PA27.</li>
+  </ul>
+  <p>The Spectrum layout was not just nostalgia: the emulator can read the matrix row by row exactly the way the real Spectrum ROM expects, with no translation table.</p>
+  <p>U9 and U10 run from <code>I2C_PWR</code>, see <a href="#pw-i2c">I2C peripherals power</a>.</p>
+</section>
+
+<!-- ============================================================ 5 ANALOG -->
+<section class="chapter" id="analog">
+  <div class="chapter-head"><div class="num">5</div><h2>Analog IO</h2><div class="sub">The jack, the speaker and the battery sense</div></div>
+
+  <p class="opening">Three small circuits share this sheet. All of them work against the 3.0 V reference, so a reading of 1.500 V on the ADC means 1.500 V on the pin, whatever the battery is doing.</p>
+
+  <figure class="sheet">
+    <a href="img/sch/analog.png"><img src="img/sch/analog.png" alt="Analog IO schematic"></a>
+    <figcaption><b>Analog IO sheet.</b> Jack buffers top left, battery sense top right, speaker amplifier below.</figcaption>
+  </figure>
+
+  <h3 id="an-jack">The jack</h3>
+  <p>J3 is a 3.5 mm TRS jack used as an analog port, not as headphones. U4 (MCP6402) is a dual rail-to-rail op-amp powered from 3V0A:</p>
+  <ul>
+    <li><b>U4A</b> buffers <code>ANALOG_OUT</code> (DAC0). The DAC itself can't drive a cable; the follower can, and R6 (22 Ω) keeps it stable with a capacitive load.</li>
+    <li><b>U4B</b> buffers the input into <code>ANALOG_IN</code> (ADC0 channel 4). The SAMD51's ADC samples a capacitor and needs a low source impedance; whatever is on the jack gets a high-impedance load instead. R12 (0 Ω) and R7 (not fitted) are a gain option: fit R7 and replace R12 to make U4B a non-inverting amplifier for small signals.</li>
+    <li><b>R10</b> (22 Ω) and <b>D1</b> (PESD3V3S2UT) protect the op-amp pins against ESD from the plug. The input is meant for 0 to 3.0 V. If you expect signals outside that range - a 3.3 V logic level, for example - replace R10 with 1 kΩ or more: it then limits the current into the op-amp's input clamps, and at these frequencies it costs nothing.</li>
+  </ul>
+  <p>Tip is the input, ring is the output, sleeve is ground.</p>
+
+  <h3 id="an-speaker">Speaker amplifier</h3>
+  <p>U11 is a PAM8304, a filterless class-D amplifier, 700 mW into the 8 Ω speaker LS1. Class-D because it runs from the battery and wastes almost nothing.</p>
+  <ul>
+    <li>The source is DAC1 (<code>SPEAKER</code>), AC-coupled through C44.</li>
+    <li>R31/R33 (300k) are the input resistors and set a low gain. A DAC at full swing is a big signal; the gain is kept down so <code>set:vol</code> has a useful range instead of being loud or off.</li>
+    <li>"Filterless" still radiates: L2/L4 (300 Ω ferrite beads) and C42/C43 (220 pF) take the switching edges off the speaker wires so they don't end up in the analog input or the display.</li>
+    <li>The shutdown pin is tied high: there was no MCU pin left to control it. The amplifier is on whenever VDD is on and off with it; muting is done by keeping DAC1 quiet.</li>
+  </ul>
+
+  <h3 id="an-vbat">Battery sense</h3>
+  <p>R5/R8 (499k each) halve the battery voltage into <code>VBAT_SENSE</code> (ADC1 channel 6). The resistors are large so the divider draws only about 4 µA from the cell - it is connected all the time, also when the board is off. C7 (100 nF) gives the ADC a low-impedance source to sample from, which the 250 kΩ divider alone couldn't. For readings near the end of the battery, use the internal reference - see <a href="#pw-rails">Analog 3.0 V</a>.</p>
+</section>
+
+<!-- ============================================================ 6 DIGITAL -->
+<section class="chapter" id="digital">
+  <div class="chapter-head"><div class="num">6</div><h2>Digital IO</h2><div class="sub">SPORT0, SPORT1, COMM and the SD card</div></div>
+
+  <p class="opening">The ports are meant for experiments, which means they will see shorts, wrong cables and static. Every pin that leaves the board is protected, and every port has its own power switch that the MCU controls and that switches itself off on overload.</p>
+
+  <figure class="wide sheet">
+    <a href="img/sch/digital.png"><img src="img/sch/digital.png" alt="Digital IO schematic"></a>
+    <figcaption><b>Digital IO sheet.</b> The three port power switches on the left, ESD protection in the middle, connectors on the right.</figcaption>
+  </figure>
+
+  <h3 id="dg-switch">Port power switches</h3>
+  <p>U12, U14 and U5 are AP22652 current-limited load switches, one per port. Each is enabled by the MCU (<code>PWR_DIO0_EN</code>, <code>PWR_DIO1_EN</code>, <code>PWR_UART_EN</code>) and has its limit set by one resistor:</p>
+  <table>
+    <thead><tr><th>Port</th><th>Switch</th><th>R<sub>LIM</sub></th><th>Limit</th><th>Fault LED</th></tr></thead>
+    <tr><td>SPORT0</td><td>U12</td><td>R20, 82k</td><td>300 mA</td><td>D22 "DIO0 OC"</td></tr>
+    <tr><td>SPORT1</td><td>U14</td><td>R23, 82k</td><td>300 mA</td><td>D23 "DIO1 OC"</td></tr>
+    <tr><td>COMM</td><td>U5</td><td>R13, 210k</td><td>125 mA</td><td>D21 "UART OC"</td></tr>
+  </table>
+  <p>On overload the switch limits the current, and its FAULT output lights the LED and tells the MCU (<code>PWR_DIO0_OC</code> on PB05, <code>PWR_DIO1_OC</code> on PB31). A short on a port never pulls down the board's own 3.3 V.</p>
+
+  <h3 id="dg-ports">SPORT and COMM</h3>
+  <p>SPORT0 (J7) and SPORT1 (J8) carry a full SERCOM - four pads - plus two timer outputs each. Any SERCOM mode works on them: SPI, UART, I2C, or plain GPIO, and the timer pins give PWM or capture. They are right-angle 8-pin headers, so small plug-in cards can sit on the board edge.</p>
+  <p>Every signal goes through a PUSB3FS4Z ESD array (D4, D18, D19). The MCU side also has 33 Ω series resistors (on the MCU sheet), which limit the current into a pin that is driven against an external source.</p>
+  <p>COMM (J6) is the 4-pin serial port on SERCOM5. Its two lines have 4k7 pull-ups to the port's <em>own</em> switched supply <code>PWR_COMM</code>, so the port works as I2C without external resistors, and with the port off nothing is pulled up - the board can't back-power a device that is switched off. D5 (PESD3V3S2UT) protects the two lines.</p>
+
+  <h3 id="dg-sd">SD card</h3>
+  <p>J2 is a microSD socket on the SAMD51's SD host controller in 4-bit mode - many times faster than SPI mode, which matters for loading games and for USB mass storage. The data and command lines go through PUSB3FS4Z arrays (D2, D3); their pull-ups (RN2, 10k) are on the MCU sheet. The socket's card-detect switch goes to <code>SD.CD</code>.</p>
+</section>
+
+<!-- ============================================================ 7 MCU -->
+<section class="chapter" id="mcu">
+  <div class="chapter-head"><div class="num">7</div><h2>MCU</h2><div class="sub">ATSAMD51J20A and what it needs</div></div>
+
+  <p class="opening">Everything the other sheets bring in ends here. The MCU sheet itself is mostly the chip's housekeeping: supply, clock, reset, the debug port, the system I2C bus and the EEPROM.</p>
+
+  <figure class="full sheet">
+    <a href="img/sch/mcu.png"><img src="img/sch/mcu.png" alt="MCU schematic"></a>
+    <figcaption><b>MCU sheet.</b> Port A and port B of U13 at the top, supply and reset bottom left, clock bottom centre, EEPROM and SWD on the right.</figcaption>
+  </figure>
+
+  <p>The ATSAMD51J20A: Cortex-M4F at 120 MHz, 1 MB Flash, 256 KB RAM, 64 pins. The J20 is the largest memory in this package, and 256 KB RAM is what makes a full-screen frame buffer, the Spectrum's 48 KB and BASIC programs possible at the same time.</p>
+
+  <h3 id="mc-supply">Supply and core regulator</h3>
+  <ul>
+    <li>All VDDIO pins have their own 100 nF (C49, C10, C22, C46) plus C20 (10 µF) for the group.</li>
+    <li><b>VDDA</b> is fed through L3, a ferrite bead (1 kΩ at 100 MHz), with C5/C13 behind it. The ADC and DAC see the 3.3 V rail without the digital noise.</li>
+    <li><b>L1</b> (10 µH) on VSW: the SAMD51 has a built-in buck converter for its 1.2 V core. Using it instead of the internal LDO cuts the core's current draw noticeably - worth one inductor on a battery-powered board. C15 (4u7) and C16 smooth VDDCORE.</li>
+  </ul>
+
+  <h3 id="mc-clock">Clock</h3>
+  <p>X1 is a 12 MHz crystal with C17/C18 (12 pF). The DPLL multiplies it to 120 MHz for the CPU. A crystal and not the internal oscillator, for two reasons: USB needs an accurate clock, and the 12 MHz divides evenly into every clock the board uses - 60 MHz for the LCD SPI, 12 MHz for the slow SERCOMs and the ADC.</p>
+
+  <h3 id="mc-reset">Reset, POWER and SWD</h3>
+  <ul>
+    <li><b>Reset</b> - R1 (10k) and C1 (1 µF) make a power-on reset delay. S1, the <b>RESET</b> button, discharges C1; R2 (220 Ω) between the capacitor and the RESET pin limits the current when the debugger or the button pulls reset low.</li>
+    <li><b>POWER</b> - S42 pulls PB30 low, with R35 (10k) as the pull-up. The button is new in V1.0 and reserved for a power on/off function that the firmware doesn't implement yet. PB30 is also SWO, the debug trace output; the two don't get in each other's way, because SWO is only used while debugging and the pull-up keeps the line idle high.</li>
+    <li><b>SWD</b> - J1 is the standard 10-pin 1.27 mm Cortex debug connector: SWDIO, SWCLK, SWO and RESET. D20 (PUSB3FS4Z) protects the lines; a debug cable is exactly the kind of thing that gets plugged in with static on it.</li>
+  </ul>
+
+  <h3 id="mc-i2c">System I2C and EEPROM</h3>
+  <p>SERCOM3 (PA22, PA23) is the board's internal I2C bus: keyboard expander, EEPROM and touch panel. R28/R29 (4k7) pull it up to 3V3, which is right for 400 kHz with this short bus.</p>
+  <p>U8 is a CAT24C512, 64 KB of I2C EEPROM at address 0xA0. It holds the LLFS file system with the settings. Write protect is tied low: the firmware decides what is written. EEPROM and not Flash, because settings change often and a byte-writable EEPROM survives a million writes without wear levelling.</p>
+
+  <h3 id="mc-series">Series resistors</h3>
+  <p>RN3, RN4 and RN5 put 33 Ω in series with SERCOM1, SERCOM2 and SERCOM4 - both SPORTs and the LCD bus. On the LCD lines they damp the ringing of 60 MHz edges on a long trace; on the ports they limit the current if an external device drives a pin that the MCU is also driving.</p>
+</section>
+
+<!-- ============================================================ A PIN MAP -->
+<section class="chapter" id="pinmap">
+  <div class="chapter-head"><div class="num appx">A</div><h2>MCU pin map</h2><div class="sub">Every ATSAMD51J20A pin and what it does on Rimer</div></div>
+  <table>
+    <thead><tr><th>Pin</th><th>Signal</th><th>Use</th></tr></thead>
+    <tr><td>PA00, PA01</td><td>TC2 WO0, WO1</td><td>SPORT1 timer pins</td></tr>
+    <tr><td>PA02</td><td>DAC0</td><td>analog output (jack)</td></tr>
+    <tr><td>PA03</td><td>VREFA</td><td>3.0 V reference input</td></tr>
+    <tr><td>PA04</td><td>ADC0 ch4</td><td>analog input (jack)</td></tr>
+    <tr><td>PA05</td><td>DAC1</td><td>speaker</td></tr>
+    <tr><td>PA06</td><td>SD.CD</td><td>SD card detect</td></tr>
+    <tr><td>PA07</td><td>PWR_UART_EN</td><td>COMM power enable</td></tr>
+    <tr><td>PA08-PA11</td><td>SD.CMD, SD.D0-D2</td><td>SD card</td></tr>
+    <tr><td>PA12-PA15</td><td>SERCOM2 PAD0-3</td><td>SPORT1</td></tr>
+    <tr><td>PA16-PA19</td><td>SERCOM1 PAD0-3</td><td>SPORT0</td></tr>
+    <tr><td>PA20, PA21</td><td>TCC0 WO0, WO1</td><td>SPORT0 timer pins</td></tr>
+    <tr><td>PA22, PA23</td><td>SERCOM3 PAD0, PAD1</td><td>system I2C SDA, SCL</td></tr>
+    <tr><td>PA24, PA25</td><td>USB DM, DP</td><td>USB</td></tr>
+    <tr><td>PA27</td><td>INT_KBD</td><td>keyboard interrupt</td></tr>
+    <tr><td>PA30, PA31</td><td>SWCLK, SWDIO</td><td>debug</td></tr>
+    <tr><td>PB00, PB01</td><td>PWR_DIO0_EN, PWR_DIO1_EN</td><td>SPORT power enables</td></tr>
+    <tr><td>PB02, PB03</td><td>SERCOM5 PAD0, PAD1</td><td>COMM TXD/SDA, RXD/SCL</td></tr>
+    <tr><td>PB04</td><td>ADC1 ch6</td><td>battery sense</td></tr>
+    <tr><td>PB05</td><td>PWR_DIO0_OC</td><td>SPORT0 overload flag</td></tr>
+    <tr><td>PB06</td><td>VBUS_DET</td><td>USB present</td></tr>
+    <tr><td>PB07</td><td>VDD_EN</td><td>VDD switch, active low</td></tr>
+    <tr><td>PB08, PB09</td><td>TC4 WO0, WO1</td><td>LCD_DMUX, BL_PWM</td></tr>
+    <tr><td>PB10, PB11</td><td>SD.D3, SD.CLK</td><td>SD card</td></tr>
+    <tr><td>PB12-PB15</td><td>SERCOM4 PAD0-3</td><td>LCD MOSI, SCLK, WR, D/C</td></tr>
+    <tr><td>PB16, PB17</td><td>TC6 WO0, WO1</td><td>INT_TOUCH, FMARK</td></tr>
+    <tr><td>PB22, PB23</td><td>XIN, XOUT</td><td>12 MHz crystal</td></tr>
+    <tr><td>PB30</td><td>SWO</td><td>trace output, POWER button</td></tr>
+    <tr><td>PB31</td><td>PWR_DIO1_OC</td><td>SPORT1 overload flag</td></tr>
+  </table>
+
+  <footer>
+    &copy; 2025 Sergey Sanders, Sesa Design Inc. · Licensed under <a href="http://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>
+  </footer>
+</section>
+
+</div></main>
+
+<script>
+(function () {
+  var links = [].slice.call(document.querySelectorAll('nav.toc a[href^="#"]'));
+  var targets = links.map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); });
+  function update() {
+    var y = window.scrollY + 120, cur = 0;
+    targets.forEach(function (t, i) { if (t && t.getBoundingClientRect().top + window.scrollY <= y) cur = i; });
+    links.forEach(function (a, i) { a.classList.toggle('active', i === cur); });
+  }
+  addEventListener('scroll', update, { passive: true });
+  update();
+})();
+</script>
+</body>
+</html>
